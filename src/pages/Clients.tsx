@@ -1,6 +1,6 @@
 
-import { ClientsOverview } from '../components/clients/ClientsOverview';
 import { MainLayout } from '../components/layout/MainLayout';
+import { ClientsOverview } from '../components/clients/ClientsOverview';
 
 const Clients = () => {
   return (
