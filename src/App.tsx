@@ -10,6 +10,8 @@ import Projects from "./pages/Projects";
 import ProjectTasks from "./pages/ProjectTasks";
 import Clients from "./pages/Clients";
 import Employees from "./pages/Employees";
+import EmployeeProfile from "./pages/EmployeeProfile";
+import EmployeeAttendance from "./pages/EmployeeAttendance";
 import Financial from "./pages/Financial";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/projects/:projectId/tasks" element={<ProjectTasks />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/employees" element={<Employees />} />
+          <Route path="/employees/:id" element={<EmployeeProfile />} />
+          <Route path="/employees/attendance" element={<EmployeeAttendance />} />
           <Route path="/financial" element={<Financial />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
