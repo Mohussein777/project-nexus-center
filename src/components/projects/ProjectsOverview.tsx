@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Search, Plus, Filter, ArrowUpDown, Clock, CheckCircle, AlertCircle, Search } from 'lucide-react';
+import { Search, Plus, Filter, ArrowUpDown, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export function ProjectsOverview() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
