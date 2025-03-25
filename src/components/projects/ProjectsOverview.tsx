@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Plus, Filter, ArrowUpDown, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export function ProjectsOverview() {
@@ -216,8 +217,8 @@ export function ProjectsOverview() {
                 </div>
                 
                 <div className="border-t border-border px-4 py-2 bg-gray-50 dark:bg-gray-800 flex justify-between">
+                  <Link to={`/projects/${project.id}/tasks`} className="text-sm text-primary hover:underline">Tasks</Link>
                   <button className="text-sm text-primary hover:underline">Details</button>
-                  <button className="text-sm text-primary hover:underline">Tasks</button>
                   <button className="text-sm text-primary hover:underline">Files</button>
                 </div>
               </div>
@@ -281,8 +282,8 @@ export function ProjectsOverview() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex space-x-2">
+                        <Link to={`/projects/${project.id}/tasks`} className="text-primary hover:underline">Tasks</Link>
                         <button className="text-primary hover:underline">Edit</button>
-                        <button className="text-primary hover:underline">Tasks</button>
                       </div>
                     </td>
                   </tr>
