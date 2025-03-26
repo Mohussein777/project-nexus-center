@@ -1,4 +1,3 @@
-
 export interface Employee {
   id: number;
   name: string;
@@ -52,10 +51,8 @@ export interface Leave {
 }
 
 export interface TimeStats {
-  today: number; // في الثواني
-  week: number;
-  month: number;
-  projects: {
-    [projectId: number]: number;
-  };
+  totalHours: number;
+  averageDaily: number;
+  trend: 'up' | 'down' | 'stable';
+  percentage: number;
 }
