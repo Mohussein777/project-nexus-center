@@ -9,7 +9,203 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          contact: string
+          created_at: string
+          email: string
+          id: number
+          location: string
+          name: string
+          phone: string
+          status: string
+          type: string
+        }
+        Insert: {
+          contact: string
+          created_at?: string
+          email: string
+          id?: number
+          location: string
+          name: string
+          phone: string
+          status: string
+          type: string
+        }
+        Update: {
+          contact?: string
+          created_at?: string
+          email?: string
+          id?: number
+          location?: string
+          name?: string
+          phone?: string
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          client_id: number
+          created_at: string
+          end_date: string
+          id: number
+          renewal_alert: boolean
+          start_date: string
+          status: string
+          title: string
+          value: number
+        }
+        Insert: {
+          client_id: number
+          created_at?: string
+          end_date: string
+          id?: number
+          renewal_alert?: boolean
+          start_date: string
+          status: string
+          title: string
+          value: number
+        }
+        Update: {
+          client_id?: number
+          created_at?: string
+          end_date?: string
+          id?: number
+          renewal_alert?: boolean
+          start_date?: string
+          status?: string
+          title?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interactions: {
+        Row: {
+          client_id: number
+          created_at: string
+          date: string
+          employee: string
+          followup_date: string | null
+          id: number
+          sentiment: string | null
+          summary: string
+          type: string
+        }
+        Insert: {
+          client_id: number
+          created_at?: string
+          date?: string
+          employee: string
+          followup_date?: string | null
+          id?: number
+          sentiment?: string | null
+          summary: string
+          type: string
+        }
+        Update: {
+          client_id?: number
+          created_at?: string
+          date?: string
+          employee?: string
+          followup_date?: string | null
+          id?: number
+          sentiment?: string | null
+          summary?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client_id: number
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: number
+          name: string
+          start_date: string
+          status: string
+        }
+        Insert: {
+          client_id: number
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: number
+          name: string
+          start_date: string
+          status: string
+        }
+        Update: {
+          client_id?: number
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: number
+          name?: string
+          start_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_metrics: {
+        Row: {
+          client_id: number
+          created_at: string
+          date: string
+          id: number
+          overall_score: number
+        }
+        Insert: {
+          client_id: number
+          created_at?: string
+          date?: string
+          id?: number
+          overall_score: number
+        }
+        Update: {
+          client_id?: number
+          created_at?: string
+          date?: string
+          id?: number
+          overall_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_metrics_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
