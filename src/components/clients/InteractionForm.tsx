@@ -14,6 +14,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { createInteraction } from '@/services/clientsService';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InteractionFormProps {
   clientId: number;
@@ -30,6 +31,7 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
   const [needsFollowup, setNeedsFollowup] = useState(false);
   const [followupDate, setFollowupDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,22 +65,22 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="interaction-type">نوع التفاعل</Label>
+          <Label htmlFor="interaction-type">{t('interactionType')}</Label>
           <Select value={type} onValueChange={setType} required>
             <SelectTrigger id="interaction-type">
-              <SelectValue placeholder="اختر النوع" />
+              <SelectValue placeholder={t('selectType')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Meeting">اجتماع</SelectItem>
-              <SelectItem value="Call">مكالمة هاتفية</SelectItem>
-              <SelectItem value="Email">بريد إلكتروني</SelectItem>
-              <SelectItem value="Note">ملاحظة</SelectItem>
+              <SelectItem value="Meeting">{t('meeting')}</SelectItem>
+              <SelectItem value="Call">{t('call')}</SelectItem>
+              <SelectItem value="Email">{t('email')}</SelectItem>
+              <SelectItem value="Note">{t('note')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="interaction-date">التاريخ والوقت</Label>
+          <Label htmlFor="interaction-date">{t('dateTime')}</Label>
           <div className="relative">
             <Input
               id="interaction-date"
@@ -94,10 +96,10 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="interaction-employee">الموظف</Label>
+        <Label htmlFor="interaction-employee">{t('employee')}</Label>
         <Input
           id="interaction-employee"
-          placeholder="اسم الموظف الذي قام بالتفاعل"
+          placeholder={t('employeeName')}
           value={employee}
           onChange={(e) => setEmployee(e.target.value)}
           required
@@ -105,10 +107,10 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="interaction-summary">ملخص</Label>
+        <Label htmlFor="interaction-summary">{t('summary')}</Label>
         <Textarea
           id="interaction-summary"
-          placeholder="صف التفاعل..."
+          placeholder={t('describeInteraction')}
           rows={4}
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
@@ -117,15 +119,15 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="interaction-sentiment">الانطباع</Label>
+        <Label htmlFor="interaction-sentiment">{t('sentiment')}</Label>
         <Select value={sentiment || ''} onValueChange={setSentiment}>
           <SelectTrigger id="interaction-sentiment">
-            <SelectValue placeholder="اختر الانطباع (اختياري)" />
+            <SelectValue placeholder={t('selectSentiment')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Positive">إيجابي</SelectItem>
-            <SelectItem value="Neutral">محايد</SelectItem>
-            <SelectItem value="Negative">سلبي</SelectItem>
+            <SelectItem value="Positive">{t('positive')}</SelectItem>
+            <SelectItem value="Neutral">{t('neutral')}</SelectItem>
+            <SelectItem value="Negative">{t('negative')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -136,12 +138,12 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
           checked={needsFollowup}
           onCheckedChange={(checked) => setNeedsFollowup(checked === true)}
         />
-        <Label htmlFor="needs-followup" className="!mt-0">هذا التفاعل يتطلب متابعة</Label>
+        <Label htmlFor="needs-followup" className="!mt-0">{t('followup')}</Label>
       </div>
 
       {needsFollowup && (
         <div className="space-y-2 ml-6">
-          <Label htmlFor="followup-date">تاريخ المتابعة</Label>
+          <Label htmlFor="followup-date">{t('followupDate')}</Label>
           <div className="relative">
             <Input
               id="followup-date"
@@ -158,10 +160,10 @@ export function InteractionForm({ clientId, onCancel, onSave }: InteractionFormP
 
       <div className="flex justify-end space-x-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          إلغاء
+          {t('cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'جاري الحفظ...' : 'حفظ التفاعل'}
+          {isSubmitting ? t('savingClient') : t('save')}
         </Button>
       </div>
     </form>

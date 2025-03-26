@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Briefcase, Users, User, BarChart4, Settings, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, Briefcase, Users, User, BarChart4, Settings } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -10,14 +11,15 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, isRtl }: SidebarProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: Home },
-    { name: 'Projects', path: '/projects', icon: Briefcase },
-    { name: 'Clients', path: '/clients', icon: Users },
-    { name: 'Employees', path: '/employees', icon: User },
-    { name: 'Financial', path: '/financial', icon: BarChart4 },
-    { name: 'Settings', path: '/settings', icon: Settings },
+    { name: 'dashboard', path: '/dashboard', icon: Home },
+    { name: 'projects', path: '/projects', icon: Briefcase },
+    { name: 'clients', path: '/clients', icon: Users },
+    { name: 'employees', path: '/employees', icon: User },
+    { name: 'financial', path: '/financial', icon: BarChart4 },
+    { name: 'settings', path: '/settings', icon: Settings },
   ];
 
   return (
@@ -29,7 +31,7 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
       <div className="py-6 px-3 flex items-center justify-center">
         {!collapsed && (
           <h1 className="text-lg font-semibold text-white">
-            {isRtl ? 'إدارة المكاتب الهندسية' : 'Engineering Office'}
+            {t('dashboard')}
           </h1>
         )}
         {collapsed && <div className="w-8 h-8 bg-sidebar-primary rounded-full animate-pulse-gentle" />}
@@ -56,7 +58,7 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
                   <span className={`ms-3 transition-opacity duration-200 ${
                     hoveredItem === item.path ? 'opacity-100' : 'opacity-90'
                   }`}>
-                    {isRtl ? getArabicName(item.name) : item.name}
+                    {t(item.name)}
                   </span>
                 )}
               </NavLink>
@@ -80,17 +82,4 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
       </div>
     </aside>
   );
-}
-
-function getArabicName(name: string): string {
-  const names: Record<string, string> = {
-    'Dashboard': 'لوحة التحكم',
-    'Projects': 'المشاريع',
-    'Clients': 'العملاء',
-    'Employees': 'الموظفون',
-    'Financial': 'المالية',
-    'Settings': 'الإعدادات'
-  };
-  
-  return names[name] || name;
 }

@@ -1,16 +1,21 @@
 
 import { useState } from 'react';
 import { Menu, Bell, User, Search, ChevronRight, ChevronLeft, Languages } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
   sidebarCollapsed: boolean;
-  onToggleDirection: () => void;
   isRtl: boolean;
 }
 
-export function TopBar({ onToggleSidebar, sidebarCollapsed, onToggleDirection, isRtl }: TopBarProps) {
+export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'ar' : 'en');
+  };
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-border shadow-sm z-10">
@@ -27,14 +32,14 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, onToggleDirection, i
             }
           </button>
 
-          <div className={`relative ml-4 ${isRtl ? 'mr-4 ml-0' : 'ml-4'}`}>
+          <div className={`relative ${isRtl ? 'mr-4 ml-0' : 'ml-4'}`}>
             <div className={`flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1.5 transition-all ${
               searchFocused ? 'ring-2 ring-primary/20 w-64' : 'w-48'
             }`}>
               <Search size={18} className="text-gray-500 dark:text-gray-400" />
               <input
                 type="text"
-                placeholder={isRtl ? "بحث..." : "Search..."}
+                placeholder={t('searchClients')}
                 className="ml-2 bg-transparent border-none outline-none text-sm w-full placeholder-gray-500 dark:placeholder-gray-400"
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
@@ -45,11 +50,11 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, onToggleDirection, i
 
         <div className="flex items-center space-x-3">
           <button 
-            onClick={onToggleDirection} 
+            onClick={toggleLanguage} 
             className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors"
-            aria-label="Toggle RTL"
+            aria-label="Toggle language"
           >
-            {isRtl ? "EN" : "عربي"}
+            {language === 'ar' ? "EN" : "عربي"}
           </button>
           
           <button className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors relative">

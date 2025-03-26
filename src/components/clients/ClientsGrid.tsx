@@ -6,6 +6,7 @@ import { Client } from './types';
 import { ClientCard } from './ClientCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ClientFormDialog } from './ClientFormDialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ClientsGridProps {
   clients: Client[];
@@ -17,6 +18,7 @@ interface ClientsGridProps {
 
 export function ClientsGrid({ clients, loading, searchQuery, onClientSelect, onClientAdded }: ClientsGridProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   if (loading) {
     return (
@@ -51,13 +53,13 @@ export function ClientsGrid({ clients, loading, searchQuery, onClientSelect, onC
         <div className="mx-auto w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
           <Search size={36} className="text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium">لم يتم العثور على عملاء</h3>
+        <h3 className="text-lg font-medium">{t('noClientsFound')}</h3>
         <p className="text-muted-foreground">
-          {searchQuery ? 'لم نجد أي عميل يطابق بحثك. جرب تعديل معايير البحث.' : 'لم يتم إضافة أي عملاء حتى الآن. أضف عميلًا جديدًا للبدء.'}
+          {searchQuery ? t('searchDescriptionNoMatch') : t('searchDescriptionEmpty')}
         </p>
         <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
           <Plus size={16} className="mr-2" />
-          إضافة عميل جديد
+          {t('addNewClient')}
         </Button>
       </div>
     );

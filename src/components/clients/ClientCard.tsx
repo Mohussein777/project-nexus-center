@@ -1,6 +1,7 @@
 
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { Client } from './types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ClientCardProps {
   client: Client;
@@ -8,6 +9,17 @@ interface ClientCardProps {
 }
 
 export function ClientCard({ client, onSelect }: ClientCardProps) {
+  const { t } = useLanguage();
+  
+  const getClientType = (type: string) => {
+    switch(type) {
+      case 'Corporate': return t('corporate');
+      case 'Government': return t('government');
+      case 'Individual': return t('individual');
+      default: return type;
+    }
+  };
+
   return (
     <div 
       className="glass-card dark:glass-card-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
@@ -24,7 +36,7 @@ export function ClientCard({ client, onSelect }: ClientCardProps) {
               ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
           }`}>
-            {client.status === 'Active' ? 'نشط' : 'غير نشط'}
+            {client.status === 'Active' ? t('active') : t('inactive')}
           </span>
         </div>
         
@@ -45,8 +57,7 @@ export function ClientCard({ client, onSelect }: ClientCardProps) {
         
         <div className="mt-4 text-sm">
           <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full px-2.5 py-0.5">
-            {client.type === 'Corporate' ? 'شركة' : 
-             client.type === 'Government' ? 'حكومي' : 'فرد'}
+            {getClientType(client.type)}
           </span>
           <span className="mr-2 text-muted-foreground">
             {client.projects} {client.projects === 1 ? 'مشروع' : 'مشاريع'}
@@ -62,19 +73,19 @@ export function ClientCard({ client, onSelect }: ClientCardProps) {
             onSelect(client.id);
           }}
         >
-          عرض الملف
+          {t('viewProfile')}
         </button>
         <button 
           className="flex-1 px-3 py-2 text-sm text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
-          المشاريع
+          {t('clientProjects')}
         </button>
         <button 
           className="flex-1 px-3 py-2 text-sm text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
-          الفواتير
+          {t('invoices')}
         </button>
       </div>
     </div>
