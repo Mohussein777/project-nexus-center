@@ -16,31 +16,43 @@ export function ClientsOverview() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch clients on component mount
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        setLoading(true);
-        const clientsData = await getClients();
-        setClients(clientsData);
-      } catch (error) {
-        console.error('Failed to fetch clients:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load clients. Please try again later.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // دالة لجلب بيانات العملاء
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const clientsData = await getClients();
+      setClients(clientsData);
+    } catch (error) {
+      console.error('Failed to fetch clients:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل بيانات العملاء. يرجى المحاولة مرة أخرى لاحقًا.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // جلب البيانات عند تحميل المكون
+  useEffect(() => {
     fetchClients();
   }, [toast]);
 
   const handleClientSelect = (clientId: number) => {
     setSelectedClientId(clientId);
     setActiveTab('profile');
+  };
+
+  const handleClientAdded = (newClient: Client) => {
+    // إضافة العميل الجديد إلى القائمة
+    setClients(prevClients => [newClient, ...prevClients]);
+    
+    // عرض رسالة نجاح (تم الانتقال إلى داخل مكون الفورم)
+    
+    // يمكن الانتقال إلى ملف تعريف العميل الجديد إذا كنا نريد ذلك
+    // setSelectedClientId(newClient.id);
+    // setActiveTab('profile');
   };
 
   const filteredClients = clients.filter(client => 
@@ -71,6 +83,7 @@ export function ClientsOverview() {
               <ClientsSearch 
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
+                onClientAdded={handleClientAdded}
               />
             )}
           </div>
@@ -82,6 +95,7 @@ export function ClientsOverview() {
             loading={loading}
             searchQuery={searchQuery}
             onClientSelect={handleClientSelect}
+            onClientAdded={handleClientAdded}
           />
         </TabsContent>
 

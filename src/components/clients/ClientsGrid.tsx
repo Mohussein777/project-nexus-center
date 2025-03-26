@@ -1,18 +1,23 @@
 
+import { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Client } from './types';
 import { ClientCard } from './ClientCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ClientFormDialog } from './ClientFormDialog';
 
 interface ClientsGridProps {
   clients: Client[];
   loading: boolean;
   searchQuery: string;
   onClientSelect: (clientId: number) => void;
+  onClientAdded?: (client: Client) => void;
 }
 
-export function ClientsGrid({ clients, loading, searchQuery, onClientSelect }: ClientsGridProps) {
+export function ClientsGrid({ clients, loading, searchQuery, onClientSelect, onClientAdded }: ClientsGridProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -50,7 +55,7 @@ export function ClientsGrid({ clients, loading, searchQuery, onClientSelect }: C
         <p className="text-muted-foreground">
           {searchQuery ? 'لم نجد أي عميل يطابق بحثك. جرب تعديل معايير البحث.' : 'لم يتم إضافة أي عملاء حتى الآن. أضف عميلًا جديدًا للبدء.'}
         </p>
-        <Button className="mt-4">
+        <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
           <Plus size={16} className="mr-2" />
           إضافة عميل جديد
         </Button>
@@ -59,14 +64,22 @@ export function ClientsGrid({ clients, loading, searchQuery, onClientSelect }: C
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {clients.map((client) => (
-        <ClientCard 
-          key={client.id} 
-          client={client} 
-          onSelect={onClientSelect} 
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {clients.map((client) => (
+          <ClientCard 
+            key={client.id} 
+            client={client} 
+            onSelect={onClientSelect} 
+          />
+        ))}
+      </div>
+      
+      <ClientFormDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        onClientAdded={onClientAdded}
+      />
+    </>
   );
 }
