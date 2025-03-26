@@ -52,8 +52,12 @@ export interface Leave {
 }
 
 export interface TimeStats {
-  totalHours: number;
-  averageDaily: number;
-  trend: 'up' | 'down' | 'stable';
-  percentage: number;
+  today: number;
+  week: number;
+  month: number;
+  projects: {[projectId: number]: number};
+  totalHours?: number;
+  averageDaily?: number;
+  trend?: 'up' | 'down' | 'stable';
+  percentage?: number;
 }

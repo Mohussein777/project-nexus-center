@@ -6,6 +6,7 @@ import * as z from "zod";
 import { Client } from "./types";
 import { createClient } from "@/services/clientsService";
 import { useToast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Dialog, 
   DialogContent, 
@@ -32,19 +33,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// تحقق zod للتأكد من صحة البيانات
+// Define the form schema with Zod
 const formSchema = z.object({
-  name: z.string().min(2, { message: "يجب أن يكون الاسم حرفين على الأقل" }),
-  contact: z.string().min(2, { message: "يجب إدخال اسم جهة الاتصال" }),
-  email: z.string().email({ message: "الرجاء إدخال بريد إلكتروني صالح" }),
-  phone: z.string().min(8, { message: "الرجاء إدخال رقم هاتف صالح" }),
-  location: z.string().min(2, { message: "الرجاء إدخال الموقع" }),
-  type: z.enum(["Corporate", "Government", "Individual"], {
-    required_error: "الرجاء اختيار نوع العميل",
-  }),
-  status: z.enum(["Active", "Inactive"], {
-    required_error: "الرجاء اختيار حالة العميل",
-  }),
+  name: z.string().min(2),
+  contact: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(8),
+  location: z.string().min(2),
+  type: z.enum(["Corporate", "Government", "Individual"]),
+  status: z.enum(["Active", "Inactive"]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,6 +55,7 @@ interface ClientFormDialogProps {
 export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,12 +73,21 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
-      const newClient = await createClient(values);
+      // Ensure all required properties are present by spreading the values directly
+      const newClient = await createClient({
+        name: values.name,
+        contact: values.contact,
+        email: values.email,
+        phone: values.phone,
+        location: values.location,
+        type: values.type,
+        status: values.status
+      });
       
       if (newClient) {
         toast({
-          title: "تم إضافة العميل بنجاح",
-          description: `تمت إضافة العميل ${newClient.name} بنجاح.`,
+          title: t('clientAddedSuccess'),
+          description: t('clientAddedSuccessDesc').replace('{name}', newClient.name),
         });
         
         form.reset();
@@ -90,13 +97,13 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
           onClientAdded(newClient);
         }
       } else {
-        throw new Error("فشل في إضافة العميل");
+        throw new Error(t('failedToAddClient'));
       }
     } catch (error) {
       console.error("Error adding client:", error);
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة العميل. يرجى المحاولة مرة أخرى.",
+        title: t('error'),
+        description: t('errorAddingClient'),
         variant: "destructive",
       });
     } finally {
@@ -108,9 +115,9 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">إضافة عميل جديد</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{t('addNewClient')}</DialogTitle>
           <DialogDescription>
-            قم بملء جميع المعلومات المطلوبة لإضافة عميل جديد.
+            {t('fillClientDetails')}
           </DialogDescription>
         </DialogHeader>
 
@@ -122,9 +129,9 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>اسم العميل</FormLabel>
+                    <FormLabel>{t('name')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="أدخل اسم العميل" {...field} />
+                      <Input placeholder={t('enterClientName')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -136,9 +143,9 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="contact"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>جهة الاتصال</FormLabel>
+                    <FormLabel>{t('contactPerson')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="أدخل اسم الشخص المسؤول" {...field} />
+                      <Input placeholder={t('enterContactName')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -150,9 +157,9 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>البريد الإلكتروني</FormLabel>
+                    <FormLabel>{t('email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="أدخل البريد الإلكتروني" {...field} />
+                      <Input placeholder={t('enterEmail')} type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,9 +171,9 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>رقم الهاتف</FormLabel>
+                    <FormLabel>{t('phone')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="أدخل رقم الهاتف" {...field} />
+                      <Input placeholder={t('enterPhone')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,9 +185,9 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>الموقع</FormLabel>
+                    <FormLabel>{t('location')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="أدخل موقع العميل" {...field} />
+                      <Input placeholder={t('enterLocation')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -192,17 +199,17 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>نوع العميل</FormLabel>
+                    <FormLabel>{t('clientType')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر نوع العميل" />
+                          <SelectValue placeholder={t('selectType')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Corporate">مؤسسة</SelectItem>
-                        <SelectItem value="Government">حكومي</SelectItem>
-                        <SelectItem value="Individual">فرد</SelectItem>
+                        <SelectItem value="Corporate">{t('corporate')}</SelectItem>
+                        <SelectItem value="Government">{t('government')}</SelectItem>
+                        <SelectItem value="Individual">{t('individual')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -215,16 +222,16 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>الحالة</FormLabel>
+                    <FormLabel>{t('status')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر حالة العميل" />
+                          <SelectValue placeholder={t('selectStatus')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Active">نشط</SelectItem>
-                        <SelectItem value="Inactive">غير نشط</SelectItem>
+                        <SelectItem value="Active">{t('active')}</SelectItem>
+                        <SelectItem value="Inactive">{t('inactive')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -238,12 +245,12 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="ml-2"
+                className={language === 'ar' ? 'ml-2' : 'mr-2'}
               >
-                إلغاء
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "جارٍ الإضافة..." : "إضافة العميل"}
+                {isSubmitting ? t('savingClient') : t('saveClient')}
               </Button>
             </DialogFooter>
           </form>
