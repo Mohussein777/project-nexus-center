@@ -18,18 +18,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { employees, timeEntries, formatTimeSpent } from './employeeData';
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from 'lucide-react';
+import { getEmployees, getTimeEntries, formatTimeSpent } from '@/services/employeeService';
+import { Employee, TimeEntry } from './types';
 
 export function AttendanceManagement() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  
+  // Fetch employee and time entry data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const employeesData = await getEmployees();
+        setEmployees(employeesData);
+        
+        // Get all time entries for now - in a real app, you'd filter by date on the server
+        const allTimeEntries: TimeEntry[] = [];
+        for (const employee of employeesData) {
+          const entries = await getTimeEntries(employee.id.toString());
+          allTimeEntries.push(...entries);
+        }
+        setTimeEntries(allTimeEntries);
+      } catch (error) {
+        console.error('Failed to fetch attendance data:', error);
+        toast({
+          title: "خطأ",
+          description: "فشل في تحميل بيانات الحضور",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
   
   // تجميع البيانات للعرض
   useEffect(() => {
-    // في التطبيق الحقيقي، سيتم جلب البيانات من الخادم بناءً على التصفية
+    if (loading) return;
     
+    // في التطبيق الحقيقي، سيتم جلب البيانات من الخادم بناءً على التصفية
     const data = employees.map(employee => {
       // تصفية حسب القسم إذا كان محددًا
       if (selectedDepartment !== 'all' && employee.department !== selectedDepartment) {
@@ -81,7 +117,7 @@ export function AttendanceManagement() {
     }).filter(Boolean); // إزالة القيم الفارغة
     
     setAttendanceData(data);
-  }, [selectedDate, selectedDepartment]);
+  }, [employees, timeEntries, selectedDate, selectedDepartment, loading]);
   
   // الحصول على قائمة الأقسام الفريدة
   const departments = [...new Set(employees.map(employee => employee.department))];
@@ -208,81 +244,87 @@ export function AttendanceManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px]">الموظف</TableHead>
-                <TableHead>القسم</TableHead>
-                <TableHead>
-                  <div className="flex items-center">
-                    وقت الحضور
-                    <ArrowUpDown size={14} className="mr-1 text-muted-foreground" />
-                  </div>
-                </TableHead>
-                <TableHead>
-                  <div className="flex items-center">
-                    وقت الانصراف
-                    <ArrowUpDown size={14} className="mr-1 text-muted-foreground" />
-                  </div>
-                </TableHead>
-                <TableHead>
-                  <div className="flex items-center">
-                    إجمالي الوقت
-                    <ArrowUpDown size={14} className="mr-1 text-muted-foreground" />
-                  </div>
-                </TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead>التفاصيل</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {attendanceData.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${employee.color} flex items-center justify-center text-white font-bold`}>
-                        {employee.avatar}
-                      </div>
-                      <div>
-                        <div className="font-medium">{employee.name}</div>
-                        <div className="text-xs text-muted-foreground">{employee.position}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{employee.department}</TableCell>
-                  <TableCell>{employee.clockIn}</TableCell>
-                  <TableCell>{employee.clockOut}</TableCell>
-                  <TableCell>{employee.totalTime}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      employee.status === 'حاضر' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                        : employee.status === 'يعمل حاليًا'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse-subtle'
-                        : employee.status === 'في إجازة'
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                    }`}>
-                      {employee.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      التفاصيل
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {attendanceData.length === 0 && (
+          {loading ? (
+            <div className="flex justify-center items-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    لا توجد بيانات للعرض
-                  </TableCell>
+                  <TableHead className="w-[250px]">الموظف</TableHead>
+                  <TableHead>القسم</TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      وقت الحضور
+                      <ArrowUpDown size={14} className="mr-1 text-muted-foreground" />
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      وقت الانصراف
+                      <ArrowUpDown size={14} className="mr-1 text-muted-foreground" />
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      إجمالي الوقت
+                      <ArrowUpDown size={14} className="mr-1 text-muted-foreground" />
+                    </div>
+                  </TableHead>
+                  <TableHead>الحالة</TableHead>
+                  <TableHead>التفاصيل</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {attendanceData.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${employee.color} flex items-center justify-center text-white font-bold`}>
+                          {employee.avatar}
+                        </div>
+                        <div>
+                          <div className="font-medium">{employee.name}</div>
+                          <div className="text-xs text-muted-foreground">{employee.position}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{employee.department}</TableCell>
+                    <TableCell>{employee.clockIn}</TableCell>
+                    <TableCell>{employee.clockOut}</TableCell>
+                    <TableCell>{employee.totalTime}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        employee.status === 'حاضر' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                          : employee.status === 'يعمل حاليًا'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse-subtle'
+                          : employee.status === 'في إجازة'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                        {employee.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm">
+                        التفاصيل
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                
+                {attendanceData.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      لا توجد بيانات للعرض
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
