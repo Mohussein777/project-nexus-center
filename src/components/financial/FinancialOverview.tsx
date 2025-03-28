@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, Download, Calendar, DollarSign, TrendingUp, TrendingDown, BarChart4 } from 'lucide-react';
 import { 
   getFinancialSummary, 
