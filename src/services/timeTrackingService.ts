@@ -31,10 +31,10 @@ export const startTimeTracking = async (entry: {
   }
 
   return {
-    id: Number(data.id),
+    id: Number(data.id), // Convert string ID to number for frontend compatibility
     employeeId: Number(data.employee_id),
     projectId: data.project_id,
-    taskId: data.task_id || null,
+    taskId: data.task_id || null, // Task ID is a string (UUID) from Supabase
     startTime: data.start_time,
     endTime: null,
     duration: null,
@@ -81,7 +81,7 @@ export const stopTimeTracking = async (entryId: string): Promise<TimeEntry | nul
     id: Number(data.id),
     employeeId: Number(data.employee_id),
     projectId: data.project_id,
-    taskId: data.task_id || null,
+    taskId: data.task_id || null, // Task ID is a string (UUID)
     startTime: data.start_time,
     endTime: data.end_time,
     duration: data.duration,
@@ -117,7 +117,7 @@ export const getCurrentTimeEntry = async (employeeId: string): Promise<TimeEntry
     id: Number(data.id),
     employeeId: Number(data.employee_id),
     projectId: data.project_id,
-    taskId: data.task_id || null,
+    taskId: data.task_id || null, // Task ID is a string (UUID)
     startTime: data.start_time,
     endTime: null,
     duration: null,

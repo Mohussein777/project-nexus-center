@@ -213,7 +213,7 @@ export const getEmployeeTimeEntries = async (employeeId: string): Promise<TimeEn
     id: Number(entry.id),
     employeeId: Number(entry.employee_id),
     projectId: entry.project_id,
-    taskId: entry.task_id || null,
+    taskId: entry.task_id || null, // Task ID is a string (UUID) from Supabase
     startTime: entry.start_time,
     endTime: entry.end_time || null,
     duration: entry.duration || null,

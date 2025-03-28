@@ -1,4 +1,3 @@
-
 import { Employee, Project, TimeEntry, Leave } from './types';
 
 export const employees: Employee[] = [
@@ -224,7 +223,7 @@ export const leaves: Leave[] = [
   }
 ];
 
-// حساب احصائيات الوقت لموظف معين
+// Calculate time stats for an employee
 export const calculateTimeStats = (employeeId: number): TimeStats => {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -234,12 +233,12 @@ export const calculateTimeStats = (employeeId: number): TimeStats => {
 
   const employeeEntries = timeEntries.filter(entry => entry.employeeId === employeeId);
   
-  // تجميع وقت اليوم
+  // Aggregate today's time
   const todaySeconds = employeeEntries
     .filter(entry => entry.date === today && entry.status === 'completed')
     .reduce((total, entry) => total + (entry.duration || 0), 0);
   
-  // تجميع وقت الأسبوع
+  // Aggregate week's time
   const weekSeconds = employeeEntries
     .filter(entry => {
       const entryDate = new Date(entry.date);
@@ -247,7 +246,7 @@ export const calculateTimeStats = (employeeId: number): TimeStats => {
     })
     .reduce((total, entry) => total + (entry.duration || 0), 0);
   
-  // تجميع وقت الشهر
+  // Aggregate month's time
   const monthSeconds = employeeEntries
     .filter(entry => {
       const entryDate = new Date(entry.date);
@@ -255,7 +254,7 @@ export const calculateTimeStats = (employeeId: number): TimeStats => {
     })
     .reduce((total, entry) => total + (entry.duration || 0), 0);
   
-  // تجميع وقت كل مشروع
+  // Aggregate time per project
   const projectSeconds = employeeEntries
     .filter(entry => entry.status === 'completed' && entry.projectId !== null)
     .reduce((projects, entry) => {
@@ -276,7 +275,7 @@ export const calculateTimeStats = (employeeId: number): TimeStats => {
   };
 };
 
-// تنسيق الوقت بالثواني إلى تنسيق ساعات:دقائق
+// Format time spent in hours:minutes
 export const formatTimeSpent = (seconds: number): string => {
   if (!seconds) return '00:00';
   
@@ -286,7 +285,7 @@ export const formatTimeSpent = (seconds: number): string => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 
-// الحصول على معلومات الموظف الحالي
+// Get current employee status
 export const getCurrentEmployeeStatus = (employeeId: number): {
   isActive: boolean;
   currentEntry: TimeEntry | null;
@@ -301,13 +300,13 @@ export const getCurrentEmployeeStatus = (employeeId: number): {
   };
 };
 
-// الحصول على معلومات المشروع من خلال معرفه
+// Get project by ID
 export const getProjectById = (projectId: number | null): Project | null => {
   if (projectId === null) return null;
   return projects.find(project => project.id === projectId) || null;
 };
 
-// دالة إضافة تسجيل وقت جديد
+// Start new time entry
 export const startNewTimeEntry = (
   employeeId: number,
   projectId: number | null,
@@ -326,13 +325,13 @@ export const startNewTimeEntry = (
     status: 'active'
   };
   
-  // في التطبيق الحقيقي: إضافة تسجيل الوقت إلى قاعدة البيانات
+  // In real application: Add time entry to database
   // timeEntries.push(newEntry);
   
   return newEntry;
 };
 
-// دالة إنهاء تسجيل وقت نشط
+// Stop time entry
 export const stopTimeEntry = (entryId: number): TimeEntry | null => {
   const entryIndex = timeEntries.findIndex(entry => entry.id === entryId);
   if (entryIndex === -1) return null;
@@ -350,7 +349,7 @@ export const stopTimeEntry = (entryId: number): TimeEntry | null => {
     status: 'completed'
   };
   
-  // في التطبيق الحقيقي: تحديث تسجيل الوقت في قاعدة البيانات
+  // In real application: Update time entry in database
   // timeEntries[entryIndex] = updatedEntry;
   
   return updatedEntry;

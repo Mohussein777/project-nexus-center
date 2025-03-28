@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/components/projects/types";
 
@@ -20,11 +19,11 @@ export const getProjects = async (): Promise<Project[]> => {
     name: project.name,
     client: project.clients?.name || 'N/A',
     status: project.status,
-    progress: project.progress || 0,
+    progress: project.progress || 0, // Default to 0 if not available
     deadline: project.end_date || 'N/A',
     team: 0, // Will count team members below
-    priority: project.priority,
-    tag: project.tag || ''
+    priority: project.priority || 'Medium', // Default to Medium if not available
+    tag: project.tag || '' // Default to empty string if not available
   }));
 };
 
@@ -54,11 +53,11 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
     name: data.name,
     client: data.clients?.name || 'N/A',
     status: data.status,
-    progress: data.progress || 0,
+    progress: data.progress || 0, // Default to 0 if not available
     deadline: data.end_date || 'N/A',
     team: count || 0,
-    priority: data.priority,
-    tag: data.tag || ''
+    priority: data.priority || 'Medium', // Default to Medium if not available
+    tag: data.tag || '' // Default to empty string if not available
   };
 };
 
@@ -96,11 +95,11 @@ export const createProject = async (project: {
     name: data.name,
     client: client?.name || 'N/A',
     status: data.status,
-    progress: data.progress || 0,
+    progress: data.progress || 0, // Default to 0 if not available
     deadline: data.end_date || 'N/A',
     team: 0,
-    priority: data.priority || 'Medium',
-    tag: data.tag || ''
+    priority: data.priority || 'Medium', // Default to Medium if not available
+    tag: data.tag || '' // Default to empty string if not available
   };
 };
 
