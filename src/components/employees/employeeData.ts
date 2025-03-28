@@ -1,4 +1,5 @@
-import { Employee, Project, TimeEntry, Leave } from './types';
+
+import { Employee, Project, TimeEntry, Leave, TimeStats } from './types';
 
 export const employees: Employee[] = [
   {
@@ -135,7 +136,7 @@ export const timeEntries: TimeEntry[] = [
     id: 1,
     employeeId: 1,
     projectId: 1,
-    taskId: 2,
+    taskId: "2", // Changed to string to match database UUID
     startTime: '2023-09-15T08:30:00',
     endTime: '2023-09-15T12:15:00',
     duration: 13500, // 3.75 ساعات بالثواني
@@ -147,7 +148,7 @@ export const timeEntries: TimeEntry[] = [
     id: 2,
     employeeId: 1,
     projectId: 1,
-    taskId: 3,
+    taskId: "3", // Changed to string to match database UUID
     startTime: '2023-09-15T13:00:00',
     endTime: '2023-09-15T17:00:00',
     duration: 14400, // 4 ساعات بالثواني
@@ -159,7 +160,7 @@ export const timeEntries: TimeEntry[] = [
     id: 3,
     employeeId: 1,
     projectId: 2,
-    taskId: 5,
+    taskId: "5", // Changed to string to match database UUID
     startTime: '2023-09-16T09:00:00',
     endTime: '2023-09-16T13:30:00',
     duration: 16200, // 4.5 ساعات بالثواني
@@ -183,7 +184,7 @@ export const timeEntries: TimeEntry[] = [
     id: 5,
     employeeId: 1,
     projectId: 1,
-    taskId: 4,
+    taskId: "4", // Changed to string to match database UUID
     startTime: new Date().toISOString(),
     endTime: null,
     duration: null,

@@ -24,7 +24,7 @@ export interface TimeEntry {
   id: number;
   employeeId: number;
   projectId: number | null;
-  taskId: string | null; // Changed from number to string to match Supabase UUID
+  taskId: string | null; // UUID from Supabase
   startTime: string;
   endTime: string | null;
   duration: number | null; // في الثواني
@@ -37,7 +37,7 @@ export interface Project {
   id: number;
   name: string;
   client: string;
-  status: 'Active' | 'Completed' | 'On Hold';
+  status: string;
   color: string;
 }
 

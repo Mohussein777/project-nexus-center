@@ -1,9 +1,81 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Filter, Download, Calendar, DollarSign, TrendingUp, TrendingDown, BarChart4 } from 'lucide-react';
+import { 
+  getFinancialSummary, 
+  getMonthlyFinancialData, 
+  getRecentInvoices, 
+  getProjectsProfitability,
+  FinancialSummary,
+  MonthlyFinancialData,
+  Invoice,
+  ProjectFinancial
+} from '@/services/financialService';
+import { useToast } from '@/components/ui/use-toast';
 
 export function FinancialOverview() {
   const [period, setPeriod] = useState('month');
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<FinancialSummary | null>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyFinancialData[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [projects, setProjects] = useState<ProjectFinancial[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [summaryData, monthlyData, invoicesData, projectsData] = await Promise.all([
+          getFinancialSummary(period),
+          getMonthlyFinancialData(),
+          getRecentInvoices(),
+          getProjectsProfitability()
+        ]);
+        
+        setSummary(summaryData);
+        setMonthlyData(monthlyData);
+        setInvoices(invoicesData);
+        setProjects(projectsData);
+      } catch (error) {
+        console.error('Error fetching financial data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load financial data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [period, toast]);
+
+  if (loading || !summary) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Financial Management</h1>
+        </div>
+        <div className="space-y-6 opacity-50">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="glass-card dark:glass-card-dark rounded-xl p-4 animate-pulse">
+                <div className="h-24 bg-muted"></div>
+              </div>
+            ))}
+          </div>
+          <div className="glass-card dark:glass-card-dark rounded-xl p-4 h-64 animate-pulse">
+            <div className="h-full bg-muted"></div>
+          </div>
+          <div className="glass-card dark:glass-card-dark rounded-xl p-4 h-64 animate-pulse">
+            <div className="h-full bg-muted"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -34,10 +106,10 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold">$427,890</p>
+              <p className="text-2xl font-bold">${summary.totalRevenue.toLocaleString()}</p>
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
                 <TrendingUp size={14} className="mr-1" />
-                +12.5% from last month
+                +{summary.revenueGrowth}% from last month
               </p>
             </div>
             <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
@@ -50,10 +122,10 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">Total Expenses</p>
-              <p className="text-2xl font-bold">$156,240</p>
+              <p className="text-2xl font-bold">${summary.totalExpenses.toLocaleString()}</p>
               <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
                 <TrendingUp size={14} className="mr-1" />
-                +8.3% from last month
+                +{summary.expenseGrowth}% from last month
               </p>
             </div>
             <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
@@ -66,10 +138,10 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">Net Profit</p>
-              <p className="text-2xl font-bold">$271,650</p>
+              <p className="text-2xl font-bold">${summary.netProfit.toLocaleString()}</p>
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
                 <TrendingUp size={14} className="mr-1" />
-                +15.2% from last month
+                +{summary.profitGrowth}% from last month
               </p>
             </div>
             <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
@@ -82,8 +154,8 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">Pending Invoices</p>
-              <p className="text-2xl font-bold">$84,320</p>
-              <p className="text-xs text-orange-600 dark:text-orange-400">8 invoices pending</p>
+              <p className="text-2xl font-bold">${summary.pendingInvoices.toLocaleString()}</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400">{summary.pendingInvoicesCount} invoices pending</p>
             </div>
             <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
               <Calendar size={20} />
@@ -108,85 +180,53 @@ export function FinancialOverview() {
             </div>
           </div>
           <div className="h-64 flex items-end space-x-2">
-            {/* This is a placeholder for a chart */}
+            {/* This is a placeholder for a chart - in a real application, we would use Recharts */}
             <div className="flex-1 flex items-end space-x-1">
-              <div className="w-1/12 h-20 bg-blue-500 rounded-t-md"></div>
-              <div className="w-1/12 h-12 bg-red-500 rounded-t-md"></div>
-              <div className="w-1/12 h-36 bg-blue-500 rounded-t-md"></div>
-              <div className="w-1/12 h-16 bg-red-500 rounded-t-md"></div>
-              <div className="w-1/12 h-48 bg-blue-500 rounded-t-md"></div>
-              <div className="w-1/12 h-24 bg-red-500 rounded-t-md"></div>
-              <div className="w-1/12 h-40 bg-blue-500 rounded-t-md"></div>
-              <div className="w-1/12 h-20 bg-red-500 rounded-t-md"></div>
-              <div className="w-1/12 h-56 bg-blue-500 rounded-t-md"></div>
-              <div className="w-1/12 h-28 bg-red-500 rounded-t-md"></div>
-              <div className="w-1/12 h-44 bg-blue-500 rounded-t-md"></div>
-              <div className="w-1/12 h-24 bg-red-500 rounded-t-md"></div>
+              {monthlyData.map((month, index) => (
+                <React.Fragment key={index}>
+                  <div 
+                    className="w-1/24 bg-blue-500 rounded-t-md" 
+                    style={{ height: `${month.revenue / 1000}px` }}
+                  ></div>
+                  <div 
+                    className="w-1/24 bg-red-500 rounded-t-md" 
+                    style={{ height: `${month.expenses / 1000}px` }}
+                  ></div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
           <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            <span>Jan</span>
-            <span>Feb</span>
-            <span>Mar</span>
-            <span>Apr</span>
-            <span>May</span>
-            <span>Jun</span>
-            <span>Jul</span>
-            <span>Aug</span>
-            <span>Sep</span>
-            <span>Oct</span>
-            <span>Nov</span>
-            <span>Dec</span>
+            {monthlyData.map((data, index) => (
+              <span key={index}>{data.month}</span>
+            ))}
           </div>
         </div>
 
         <div className="glass-card dark:glass-card-dark rounded-xl p-4">
           <h2 className="text-lg font-semibold mb-4">Recent Invoices</h2>
           <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-border">
-              <div>
-                <p className="font-medium">INV-2023-056</p>
-                <p className="text-sm text-muted-foreground">Al Madina Group</p>
-                <p className="text-xs text-muted-foreground">Due: Jun 15, 2023</p>
+            {invoices.map(invoice => (
+              <div key={invoice.id} className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-border">
+                <div>
+                  <p className="font-medium">{invoice.number}</p>
+                  <p className="text-sm text-muted-foreground">{invoice.clientName}</p>
+                  <p className="text-xs text-muted-foreground">Due: {invoice.dueDate}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold">${invoice.amount.toLocaleString()}</p>
+                  <p className={`text-xs px-2 py-0.5 rounded-full ${
+                    invoice.status === 'Paid' 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                      : invoice.status === 'Pending'
+                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {invoice.status}
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold">$24,500</p>
-                <p className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full">Pending</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-border">
-              <div>
-                <p className="font-medium">INV-2023-055</p>
-                <p className="text-sm text-muted-foreground">Gulf Developers</p>
-                <p className="text-xs text-muted-foreground">Due: Jun 12, 2023</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold">$18,750</p>
-                <p className="text-xs px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-full">Paid</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-border">
-              <div>
-                <p className="font-medium">INV-2023-054</p>
-                <p className="text-sm text-muted-foreground">Al Hamra Real Estate</p>
-                <p className="text-xs text-muted-foreground">Due: Jun 10, 2023</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold">$32,800</p>
-                <p className="text-xs px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded-full">Overdue</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-border">
-              <div>
-                <p className="font-medium">INV-2023-053</p>
-                <p className="text-sm text-muted-foreground">Ministry of Technology</p>
-                <p className="text-xs text-muted-foreground">Due: Jun 8, 2023</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold">$45,000</p>
-                <p className="text-xs px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-full">Paid</p>
-              </div>
-            </div>
+            ))}
           </div>
           <button className="w-full mt-4 py-2 text-center text-sm text-primary border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             View All Invoices
@@ -210,71 +250,35 @@ export function FinancialOverview() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-border">
-                <td className="px-4 py-3 text-sm font-medium">Al Hamra Tower</td>
-                <td className="px-4 py-3 text-sm">Al Hamra Real Estate</td>
-                <td className="px-4 py-3 text-sm text-right">$240,000</td>
-                <td className="px-4 py-3 text-sm text-right">$156,000</td>
-                <td className="px-4 py-3 text-sm text-right">$84,000</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                    On Budget
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-right font-medium text-green-600 dark:text-green-400">35%</td>
-              </tr>
-              <tr className="border-b border-border">
-                <td className="px-4 py-3 text-sm font-medium">Marina Residence</td>
-                <td className="px-4 py-3 text-sm">Gulf Developers</td>
-                <td className="px-4 py-3 text-sm text-right">$180,000</td>
-                <td className="px-4 py-3 text-sm text-right">$135,000</td>
-                <td className="px-4 py-3 text-sm text-right">$45,000</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                    At Risk
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-right font-medium text-yellow-600 dark:text-yellow-400">25%</td>
-              </tr>
-              <tr className="border-b border-border">
-                <td className="px-4 py-3 text-sm font-medium">Tech Park</td>
-                <td className="px-4 py-3 text-sm">Ministry of Technology</td>
-                <td className="px-4 py-3 text-sm text-right">$350,000</td>
-                <td className="px-4 py-3 text-sm text-right">$252,000</td>
-                <td className="px-4 py-3 text-sm text-right">$98,000</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                    On Budget
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-right font-medium text-green-600 dark:text-green-400">28%</td>
-              </tr>
-              <tr className="border-b border-border">
-                <td className="px-4 py-3 text-sm font-medium">Gulf Heights</td>
-                <td className="px-4 py-3 text-sm">Al Madina Group</td>
-                <td className="px-4 py-3 text-sm text-right">$210,000</td>
-                <td className="px-4 py-3 text-sm text-right">$189,000</td>
-                <td className="px-4 py-3 text-sm text-right">$21,000</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                    Over Budget
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-right font-medium text-red-600 dark:text-red-400">10%</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium">Central Hospital</td>
-                <td className="px-4 py-3 text-sm">Ministry of Health</td>
-                <td className="px-4 py-3 text-sm text-right">$420,000</td>
-                <td className="px-4 py-3 text-sm text-right">$294,000</td>
-                <td className="px-4 py-3 text-sm text-right">$126,000</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                    On Budget
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-right font-medium text-green-600 dark:text-green-400">30%</td>
-              </tr>
+              {projects.map((project, index) => (
+                <tr key={index} className="border-b border-border">
+                  <td className="px-4 py-3 text-sm font-medium">{project.projectName}</td>
+                  <td className="px-4 py-3 text-sm">{project.clientName}</td>
+                  <td className="px-4 py-3 text-sm text-right">${project.budget.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-right">${project.spent.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-right">${project.remaining.toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                      project.status === 'On Budget' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                        : project.status === 'At Risk'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {project.status}
+                    </span>
+                  </td>
+                  <td className={`px-4 py-3 text-sm text-right font-medium ${
+                    project.profitMargin > 30 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : project.profitMargin > 20
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {project.profitMargin}%
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
