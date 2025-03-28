@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -11,7 +11,8 @@ import {
   ListChecks, 
   Layers, 
   FileText,
-  ChevronLeft
+  ChevronLeft,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -20,102 +21,8 @@ import { TaskForm } from './TaskForm';
 import { TaskList } from './TaskList';
 import { KanbanBoard } from './KanbanBoard';
 import { GanttChart } from './GanttChart';
-
-// Demo project data - in a real app, this would come from an API
-const projectData = {
-  id: 1,
-  name: 'Al Hamra Tower',
-  client: 'Al Hamra Real Estate',
-  status: 'In Progress',
-  progress: 65,
-  deadline: 'Aug 15, 2023',
-  team: 8,
-  priority: 'High',
-  description: 'A luxury commercial tower in the heart of the business district.',
-  tag: 'Commercial'
-};
-
-// Demo tasks data
-const initialTasks = [
-  {
-    id: 1,
-    projectId: 1,
-    name: 'Foundation Design',
-    description: 'Complete the structural design for the building foundation',
-    assignee: 'Ahmed Ali',
-    startDate: '2023-01-15',
-    endDate: '2023-02-28',
-    priority: 'High',
-    status: 'Completed',
-    progress: 100,
-    dependencies: []
-  },
-  {
-    id: 2,
-    projectId: 1,
-    name: 'Electrical Systems Planning',
-    description: 'Design and plan all electrical systems for the building',
-    assignee: 'Sarah Mahmoud',
-    startDate: '2023-02-10',
-    endDate: '2023-04-20',
-    priority: 'Medium',
-    status: 'In Progress',
-    progress: 70,
-    dependencies: [1]
-  },
-  {
-    id: 3,
-    projectId: 1,
-    name: 'HVAC System Design',
-    description: 'Complete HVAC system design including air conditioning and ventilation',
-    assignee: 'Mohammed Hassan',
-    startDate: '2023-03-01',
-    endDate: '2023-05-15',
-    priority: 'Medium',
-    status: 'In Progress',
-    progress: 50,
-    dependencies: [1]
-  },
-  {
-    id: 4,
-    projectId: 1,
-    name: 'Facade Design',
-    description: 'Design the exterior facade of the building',
-    assignee: 'Layla Kareem',
-    startDate: '2023-02-15',
-    endDate: '2023-04-30',
-    priority: 'High',
-    status: 'Review',
-    progress: 90,
-    dependencies: []
-  },
-  {
-    id: 5,
-    projectId: 1,
-    name: 'Interior Layout Planning',
-    description: 'Plan the interior layout of all floors',
-    assignee: 'Omar Nabil',
-    startDate: '2023-04-01',
-    endDate: '2023-06-15',
-    priority: 'Medium',
-    status: 'Not Started',
-    progress: 0,
-    dependencies: [4]
-  },
-  {
-    id: 6,
-    projectId: 1,
-    name: 'Fire Safety System',
-    description: 'Design and implement fire safety systems',
-    assignee: 'Hala Salem',
-    startDate: '2023-03-15',
-    endDate: '2023-05-30',
-    priority: 'High',
-    status: 'At Risk',
-    progress: 30,
-    dependencies: [2]
-  }
-];
+import { getProjectById } from '@/services/projectService';
+import { getTasks, createTask, updateTask, deleteTask } from '@/services/taskService';
 
 type ViewMode = 'list' | 'kanban' | 'gantt';
 
@@ -124,54 +31,178 @@ export function ProjectTasksOverview() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
+  const [project, setProject] = useState(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  // In a real app, we would fetch the project and tasks data based on the projectId
-  
-  const handleCreateTask = (newTask: any) => {
-    const taskWithId = {
-      ...newTask,
-      id: tasks.length + 1,
-      projectId: Number(projectId) || 1,
+  useEffect(() => {
+    const fetchProjectAndTasks = async () => {
+      if (!projectId) return;
+      
+      try {
+        const projectData = await getProjectById(Number(projectId));
+        if (!projectData) {
+          toast({
+            title: "خطأ",
+            description: "لم يتم العثور على المشروع",
+            variant: "destructive",
+          });
+          navigate('/projects');
+          return;
+        }
+        
+        setProject(projectData);
+        
+        const tasksData = await getTasks(Number(projectId));
+        setTasks(tasksData);
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+        toast({
+          title: "خطأ",
+          description: "فشل في تحميل بيانات المشروع",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
     
-    setTasks([...tasks, taskWithId]);
-    setIsAddingTask(false);
-    
-    toast({
-      title: "مهمة جديدة",
-      description: "تم إنشاء المهمة بنجاح",
-    });
+    fetchProjectAndTasks();
+  }, [projectId, navigate, toast]);
+  
+  const handleCreateTask = async (newTask) => {
+    try {
+      const taskData = {
+        name: newTask.name,
+        description: newTask.description,
+        project_id: Number(projectId),
+        assignee_id: newTask.assigneeId,
+        start_date: newTask.startDate,
+        end_date: newTask.endDate,
+        status: newTask.status,
+        priority: newTask.priority,
+        progress: newTask.progress || 0
+      };
+      
+      const createdTask = await createTask(taskData);
+      if (createdTask) {
+        setTasks([...tasks, createdTask]);
+        setIsAddingTask(false);
+        
+        toast({
+          title: "مهمة جديدة",
+          description: "تم إنشاء المهمة بنجاح",
+        });
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في إنشاء المهمة",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleUpdateTask = (updatedTask: any) => {
-    setTasks(tasks.map(task => 
-      task.id === updatedTask.id ? updatedTask : task
-    ));
-    
-    toast({
-      title: "تم التحديث",
-      description: "تم تحديث المهمة بنجاح",
-    });
+  const handleUpdateTask = async (updatedTask) => {
+    try {
+      const success = await updateTask(updatedTask.id, {
+        name: updatedTask.name,
+        description: updatedTask.description,
+        assignee_id: updatedTask.assigneeId,
+        start_date: updatedTask.startDate,
+        end_date: updatedTask.endDate,
+        status: updatedTask.status,
+        priority: updatedTask.priority,
+        progress: updatedTask.progress
+      });
+      
+      if (success) {
+        setTasks(tasks.map(task => 
+          task.id === updatedTask.id ? updatedTask : task
+        ));
+        
+        toast({
+          title: "تم التحديث",
+          description: "تم تحديث المهمة بنجاح",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث المهمة",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleUpdateTaskStatus = (taskId: number, newStatus: string) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
+  const handleUpdateTaskStatus = async (taskId, newStatus) => {
+    try {
+      const taskToUpdate = tasks.find(task => task.id === taskId);
+      if (!taskToUpdate) return;
+      
+      const success = await updateTask(taskId, {
+        status: newStatus
+      });
+      
+      if (success) {
+        setTasks(tasks.map(task => 
+          task.id === taskId ? { ...task, status: newStatus } : task
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة المهمة",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleDeleteTask = (taskId: number) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
-    
-    toast({
-      title: "تم الحذف",
-      description: "تم حذف المهمة بنجاح",
-      variant: "destructive",
-    });
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const success = await deleteTask(taskId);
+      
+      if (success) {
+        setTasks(tasks.filter(task => task.id !== taskId));
+        
+        toast({
+          title: "تم الحذف",
+          description: "تم حذف المهمة بنجاح",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المهمة",
+        variant: "destructive",
+      });
+    }
   };
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!project) {
+    return (
+      <div className="text-center p-12">
+        <h2 className="text-2xl font-bold mb-2">المشروع غير موجود</h2>
+        <p className="text-muted-foreground mb-4">لم نتمكن من العثور على المشروع المطلوب</p>
+        <Button onClick={() => navigate('/projects')}>العودة إلى المشاريع</Button>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -185,15 +216,15 @@ export function ProjectTasksOverview() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold">{projectData.name}</h1>
+          <h1 className="text-2xl font-bold">{project.name}</h1>
           <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-            projectData.status === 'On Track' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-            projectData.status === 'At Risk' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-            projectData.status === 'Delayed' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
-            projectData.status === 'On Hold' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400' :
+            project.status === 'On Track' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+            project.status === 'At Risk' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+            project.status === 'Delayed' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+            project.status === 'On Hold' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400' :
             'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
           }`}>
-            {projectData.status}
+            {project.status}
           </span>
         </div>
         
@@ -202,21 +233,21 @@ export function ProjectTasksOverview() {
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">الموعد النهائي</p>
-              <p className="font-medium">{projectData.deadline}</p>
+              <p className="font-medium">{project.deadline}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">فريق العمل</p>
-              <p className="font-medium">{projectData.team} أعضاء</p>
+              <p className="font-medium">{project.team} أعضاء</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">النوع</p>
-              <p className="font-medium">{projectData.tag}</p>
+              <p className="font-medium">{project.tag || 'غير محدد'}</p>
             </div>
           </div>
         </div>
@@ -268,6 +299,10 @@ export function ProjectTasksOverview() {
               onSubmit={handleCreateTask} 
               onCancel={() => setIsAddingTask(false)} 
             />
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="text-center p-12 text-muted-foreground">
+            لا توجد مهام لهذا المشروع بعد. أضف مهمة جديدة للبدء.
           </div>
         ) : (
           <>

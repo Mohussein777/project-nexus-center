@@ -1,21 +1,46 @@
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewMode } from './types';
-import { projects } from './projectsData';
+import { getProjects } from '@/services/projectService';
 import { ProjectsSearchFilter } from './ProjectsSearchFilter';
 import { ViewToggle } from './ViewToggle';
 import { ProjectsGridView } from './ProjectsGridView';
 import { ProjectsListView } from './ProjectsListView';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export function ProjectsOverview() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await getProjects();
+        setProjects(data);
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+        toast({
+          title: "خطأ",
+          description: "فشل في تحميل المشاريع",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [toast]);
 
   // Filter projects based on search query
   const filteredProjects = projects.filter(project => 
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     project.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.tag.toLowerCase().includes(searchQuery.toLowerCase())
+    (project.tag && project.tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -31,10 +56,20 @@ export function ProjectsOverview() {
           <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
         
-        {viewMode === 'grid' ? (
-          <ProjectsGridView projects={filteredProjects} />
+        {loading ? (
+          <div className="flex justify-center items-center p-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredProjects.length > 0 ? (
+          viewMode === 'grid' ? (
+            <ProjectsGridView projects={filteredProjects} />
+          ) : (
+            <ProjectsListView projects={filteredProjects} />
+          )
         ) : (
-          <ProjectsListView projects={filteredProjects} />
+          <div className="text-center p-12 text-muted-foreground">
+            No projects found. Try adjusting your search criteria.
+          </div>
         )}
       </div>
     </div>
