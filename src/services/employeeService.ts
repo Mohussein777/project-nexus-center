@@ -387,14 +387,41 @@ export const formatTimeSpent = (seconds: number): string => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 
-export const getCurrentEmployeeStatus = (employeeId: number): {
-  isActive: boolean;
-  currentEntry: TimeEntry | null;
-} => {
-  return {
-    isActive: false,
-    currentEntry: null
-  };
+export const getCurrentEmployeeStatus = async (employeeId: string) => {
+  try {
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+
+    const { data, error } = await supabase
+      .from('time_entries')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .gte('start_time', startOfDay)
+      .lte('start_time', endOfDay)
+      .order('start_time', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.error('Error fetching employee status:', error);
+      return { isActive: false, currentEntry: null };
+    }
+
+    if (!data || data.length === 0) {
+      return { isActive: false, currentEntry: null };
+    }
+
+    const latestEntry = data[0];
+    const isActive = !latestEntry.end_time;
+
+    return {
+      isActive,
+      currentEntry: isActive ? latestEntry : null
+    };
+  } catch (error) {
+    console.error('Error in getCurrentEmployeeStatus:', error);
+    return { isActive: false, currentEntry: null };
+  }
 };
 
 export const getCurrentEmployeeStatusAsync = async (employeeId: number): Promise<{

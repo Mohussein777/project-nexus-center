@@ -16,23 +16,24 @@ export function ProjectsOverview() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await getProjects();
-        setProjects(data);
-      } catch (error) {
-        console.error('Failed to fetch projects:', error);
-        toast({
-          title: "خطأ",
-          description: "فشل في تحميل المشاريع",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await getProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل المشاريع",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProjects();
   }, [toast]);
 
@@ -46,13 +47,17 @@ export function ProjectsOverview() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-        <ProjectsSearchFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <h1 className="text-2xl font-bold tracking-tight">المشاريع</h1>
+        <ProjectsSearchFilter 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+          onProjectCreated={fetchProjects}
+        />
       </div>
 
       <div className="glass-card dark:glass-card-dark rounded-xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-semibold">All Projects ({filteredProjects.length})</h2>
+          <h2 className="font-semibold">جميع المشاريع ({filteredProjects.length})</h2>
           <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
         
@@ -68,7 +73,7 @@ export function ProjectsOverview() {
           )
         ) : (
           <div className="text-center p-12 text-muted-foreground">
-            No projects found. Try adjusting your search criteria.
+            لم يتم العثور على مشاريع. حاول تعديل معايير البحث.
           </div>
         )}
       </div>
