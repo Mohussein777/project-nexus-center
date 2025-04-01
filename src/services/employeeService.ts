@@ -424,14 +424,16 @@ export const getCurrentEmployeeStatus = async (employeeId: string) => {
   }
 };
 
-export const getCurrentEmployeeStatusAsync = async (employeeId: number): Promise<{
+export const getCurrentEmployeeStatusAsync = async (employeeId: string | number): Promise<{
   isActive: boolean;
   currentEntry: TimeEntry | null;
 }> => {
+  const employeeIdStr = typeof employeeId === 'number' ? employeeId.toString() : employeeId;
+  
   const { data, error } = await supabase
     .from('time_entries')
     .select('*')
-    .eq('employee_id', employeeId)
+    .eq('employee_id', employeeIdStr)
     .eq('status', 'active')
     .order('start_time', { ascending: false })
     .limit(1);
