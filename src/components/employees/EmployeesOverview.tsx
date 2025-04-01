@@ -5,7 +5,7 @@ import { Search, Plus, Filter, Mail, Phone, Briefcase, Calendar, Clock, Timer } 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
-import { getEmployees, getCurrentEmployeeStatus } from '@/services/employeeService';
+import { getEmployees } from '@/services/employeeService';
 import { Employee } from './types';
 
 export function EmployeesOverview() {

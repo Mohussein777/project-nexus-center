@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Employee, Leave, TimeEntry, TimeStats } from "@/components/employees/types";
 
@@ -23,7 +22,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
     status: emp.status as 'Active' | 'On Leave' | 'Inactive',
     avatar: emp.name.split(' ').map(n => n[0]).join(''),
     color: getRandomColor(),
-    projects: 0, // Will be populated separately
+    projects: 0,
     employeeId: emp.employee_id || '',
     manager: emp.manager || '',
     skills: []
@@ -42,13 +41,11 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
     return null;
   }
 
-  // Get employee skills
   const { data: skills } = await supabase
     .from('employee_skills')
     .select('skill')
     .eq('employee_id', id);
 
-  // Count employee projects
   const { count } = await supabase
     .from('project_employees')
     .select('*', { count: 'exact', head: true })
@@ -94,7 +91,6 @@ export const createEmployee = async (employee: Omit<Employee, 'id' | 'avatar' | 
     throw error;
   }
 
-  // Add skills if provided
   if (employee.skills && employee.skills.length > 0) {
     const skillsToInsert = employee.skills.map(skill => ({
       employee_id: data.id,
@@ -150,15 +146,12 @@ export const updateEmployee = async (id: string, employee: Partial<Omit<Employee
     return false;
   }
 
-  // Update skills if provided
   if (employee.skills) {
-    // Delete existing skills
     await supabase
       .from('employee_skills')
       .delete()
       .eq('employee_id', id);
     
-    // Add new skills
     const skillsToInsert = employee.skills.map(skill => ({
       employee_id: id,
       skill
@@ -213,7 +206,7 @@ export const getEmployeeTimeEntries = async (employeeId: string): Promise<TimeEn
     id: Number(entry.id),
     employeeId: Number(entry.employee_id),
     projectId: entry.project_id,
-    taskId: entry.task_id || null, // Task ID is a string (UUID) from Supabase
+    taskId: entry.task_id || null,
     startTime: entry.start_time,
     endTime: entry.end_time || null,
     duration: entry.duration || null,
@@ -246,7 +239,6 @@ export const getEmployeeLeaves = async (employeeId: string): Promise<Leave[]> =>
   }));
 };
 
-// Helper function to generate random gradient colors for employee avatars
 function getRandomColor(): string {
   const colors = [
     'from-blue-500 to-cyan-500',
@@ -262,7 +254,6 @@ function getRandomColor(): string {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-// Calculate time stats for an employee
 export const calculateTimeStats = async (employeeId: string): Promise<TimeStats> => {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -272,7 +263,6 @@ export const calculateTimeStats = async (employeeId: string): Promise<TimeStats>
   
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // Get completed time entries
   const { data, error } = await supabase
     .from('time_entries')
     .select('duration, date, project_id')
@@ -289,7 +279,6 @@ export const calculateTimeStats = async (employeeId: string): Promise<TimeStats>
     };
   }
 
-  // Calculate totals
   const todaySeconds = data
     .filter(entry => entry.date === today)
     .reduce((total, entry) => total + (entry.duration || 0), 0);
@@ -302,7 +291,6 @@ export const calculateTimeStats = async (employeeId: string): Promise<TimeStats>
     .filter(entry => new Date(entry.date) >= monthStart)
     .reduce((total, entry) => total + (entry.duration || 0), 0);
   
-  // Calculate per-project totals
   const projectSeconds = data.reduce((projects, entry) => {
     if (entry.project_id !== null) {
       if (!projects[entry.project_id]) {
@@ -313,13 +301,11 @@ export const calculateTimeStats = async (employeeId: string): Promise<TimeStats>
     return projects;
   }, {} as {[projectId: number]: number});
   
-  // Calculate additional stats
-  const totalHours = Math.round(monthSeconds / 36) / 100; // Convert to hours with 2 decimal places
+  const totalHours = Math.round(monthSeconds / 36) / 100;
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const currentDay = now.getDate();
   const averageDaily = totalHours / currentDay;
   
-  // Get previous month's data for trend analysis
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
   
@@ -354,5 +340,95 @@ export const calculateTimeStats = async (employeeId: string): Promise<TimeStats>
     averageDaily,
     trend,
     percentage: Math.abs(percentage)
+  };
+};
+
+export const getTimeEntries = async (date?: string): Promise<TimeEntry[]> => {
+  let query = supabase
+    .from('time_entries')
+    .select(`
+      *,
+      projects:project_id (name),
+      tasks:task_id (name)
+    `)
+    .order('date', { ascending: false });
+  
+  if (date) {
+    query = query.eq('date', date);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching time entries:', error);
+    return [];
+  }
+
+  return data.map(entry => ({
+    id: Number(entry.id),
+    employeeId: Number(entry.employee_id),
+    projectId: entry.project_id,
+    taskId: entry.task_id || null,
+    startTime: entry.start_time,
+    endTime: entry.end_time || null,
+    duration: entry.duration || null,
+    description: entry.description || '',
+    date: entry.date,
+    status: entry.status as 'active' | 'completed',
+  }));
+};
+
+export const formatTimeSpent = (seconds: number): string => {
+  if (!seconds) return '00:00';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+export const getCurrentEmployeeStatus = (employeeId: number): {
+  isActive: boolean;
+  currentEntry: TimeEntry | null;
+} => {
+  return {
+    isActive: false,
+    currentEntry: null
+  };
+};
+
+export const getCurrentEmployeeStatusAsync = async (employeeId: number): Promise<{
+  isActive: boolean;
+  currentEntry: TimeEntry | null;
+}> => {
+  const { data, error } = await supabase
+    .from('time_entries')
+    .select('*')
+    .eq('employee_id', employeeId)
+    .eq('status', 'active')
+    .order('start_time', { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return {
+      isActive: false,
+      currentEntry: null
+    };
+  }
+
+  return {
+    isActive: true,
+    currentEntry: {
+      id: Number(data[0].id),
+      employeeId: Number(data[0].employee_id),
+      projectId: data[0].project_id,
+      taskId: data[0].task_id || null,
+      startTime: data[0].start_time,
+      endTime: data[0].end_time || null,
+      duration: data[0].duration || null,
+      description: data[0].description || '',
+      date: data[0].date,
+      status: data[0].status as 'active' | 'completed',
+    }
   };
 };

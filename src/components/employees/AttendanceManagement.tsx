@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, UserCheck, Filter, Download, ArrowUpDown, Check, AlertCircle } from 'lucide-react';
 import { 
@@ -39,13 +38,9 @@ export function AttendanceManagement() {
         const employeesData = await getEmployees();
         setEmployees(employeesData);
         
-        // Get all time entries for now - in a real app, you'd filter by date on the server
-        const allTimeEntries: TimeEntry[] = [];
-        for (const employee of employeesData) {
-          const entries = await getTimeEntries(employee.id.toString());
-          allTimeEntries.push(...entries);
-        }
-        setTimeEntries(allTimeEntries);
+        // Get time entries for the selected date
+        const entriesData = await getTimeEntries(selectedDate);
+        setTimeEntries(entriesData);
       } catch (error) {
         console.error('Failed to fetch attendance data:', error);
         toast({
@@ -59,7 +54,7 @@ export function AttendanceManagement() {
     };
 
     fetchData();
-  }, [toast]);
+  }, [selectedDate, toast]);
   
   // تجميع البيانات للعرض
   useEffect(() => {
