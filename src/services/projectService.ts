@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/components/projects/types";
 import { useToast } from '@/hooks/use-toast';
@@ -21,11 +22,11 @@ export const getProjects = async (): Promise<Project[]> => {
     project_number: project.project_number || '',
     client: project.clients?.name || 'N/A',
     status: project.status,
-    progress: 0, // Default since progress is not in the database yet
+    progress: project.progress || 0,
     deadline: project.end_date || 'N/A',
     team: 0, // Will count team members below
-    priority: 'Medium', // Default since priority is not in the database yet
-    tag: project.description?.substring(0, 10) || '' // Using part of description as tag temporarily
+    priority: project.priority || 'Medium',
+    tag: project.tag || project.description?.substring(0, 10) || ''
   }));
 };
 
@@ -56,11 +57,11 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
     project_number: data.project_number || '',
     client: data.clients?.name || 'N/A',
     status: data.status,
-    progress: 0, // Default since progress is not in the database yet
+    progress: data.progress || 0,
     deadline: data.end_date || 'N/A',
     team: count || 0,
-    priority: 'Medium', // Default since priority is not in the database yet
-    tag: data.description?.substring(0, 10) || '' // Using part of description as tag temporarily
+    priority: data.priority || 'Medium',
+    tag: data.tag || data.description?.substring(0, 10) || ''
   };
 };
 
@@ -76,18 +77,24 @@ export const createProject = async (project: {
   priority?: string;
   tag?: string;
 }): Promise<Project | null> => {
+  // Convert to lowercase with underscores for status to match database constraint
+  const statusValue = project.status.toLowerCase().replace(' ', '_');
+  
   // Filter out properties not in the database schema
   const { priority, tag, ...projectData } = project;
   
   // Convert Date objects to strings if needed
   const cleanProjectData = {
     ...projectData,
+    status: statusValue,
     start_date: projectData.start_date instanceof Date 
       ? projectData.start_date.toISOString() 
       : projectData.start_date,
     end_date: projectData.end_date instanceof Date 
       ? projectData.end_date.toISOString() 
       : projectData.end_date,
+    priority: priority,
+    tag: tag
   };
 
   console.log('Creating project with data:', cleanProjectData);
@@ -118,11 +125,11 @@ export const createProject = async (project: {
     project_number: data.project_number || '',
     client: client?.name || 'N/A',
     status: data.status,
-    progress: 0, // Default value
+    progress: data.progress || 0,
     deadline: data.end_date || 'N/A',
     team: 0,
-    priority: project.priority || 'Medium',
-    tag: project.tag || data.description?.substring(0, 10) || ''
+    priority: data.priority || 'Medium',
+    tag: data.tag || data.description?.substring(0, 10) || ''
   };
 };
 
@@ -138,10 +145,16 @@ export const updateProject = async (id: number, project: {
   priority?: string;
   tag?: string;
 }): Promise<boolean> => {
+  // Convert status if present
+  const updatedProject = { ...project };
+  if (project.status) {
+    updatedProject.status = project.status.toLowerCase().replace(' ', '_');
+  }
+  
   const { error } = await supabase
     .from('projects')
     .update({
-      ...project,
+      ...updatedProject,
       updated_at: new Date().toISOString()
     })
     .eq('id', id);

@@ -298,9 +298,12 @@ export type Database = {
           end_date: string | null
           id: number
           name: string
+          priority: string | null
+          progress: number | null
           project_number: string | null
           start_date: string
           status: string
+          tag: string | null
         }
         Insert: {
           client_id: number
@@ -309,9 +312,12 @@ export type Database = {
           end_date?: string | null
           id?: number
           name: string
+          priority?: string | null
+          progress?: number | null
           project_number?: string | null
           start_date: string
           status: string
+          tag?: string | null
         }
         Update: {
           client_id?: number
@@ -320,9 +326,12 @@ export type Database = {
           end_date?: string | null
           id?: number
           name?: string
+          priority?: string | null
+          progress?: number | null
           project_number?: string | null
           start_date?: string
           status?: string
+          tag?: string | null
         }
         Relationships: [
           {

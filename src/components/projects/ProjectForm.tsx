@@ -75,7 +75,7 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
       project_number: initialData?.project_number || "",
       description: initialData?.description || "",
       client_id: initialData?.client_id || undefined,
-      status: initialData?.status || "On Track",
+      status: initialData?.status || "planning",
       start_date: initialData?.start_date || new Date(),
       end_date: initialData?.end_date,
       budget: initialData?.budget || undefined,
@@ -214,12 +214,12 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Planning">{t('planning')}</SelectItem>
-                    <SelectItem value="On Track">{t('onTrack')}</SelectItem>
-                    <SelectItem value="At Risk">{t('atRisk')}</SelectItem>
-                    <SelectItem value="Delayed">{t('delayed')}</SelectItem>
-                    <SelectItem value="On Hold">{t('onHold')}</SelectItem>
-                    <SelectItem value="Completed">{t('completed')}</SelectItem>
+                    <SelectItem value="planning">{t('planning')}</SelectItem>
+                    <SelectItem value="on_track">{t('onTrack')}</SelectItem>
+                    <SelectItem value="at_risk">{t('atRisk')}</SelectItem>
+                    <SelectItem value="delayed">{t('delayed')}</SelectItem>
+                    <SelectItem value="on_hold">{t('onHold')}</SelectItem>
+                    <SelectItem value="completed">{t('completed')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
