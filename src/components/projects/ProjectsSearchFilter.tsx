@@ -39,7 +39,6 @@ export function ProjectsSearchFilter({
       if (result) {
         toast({
           title: t('projectCreatedSuccess'),
-          // Change 'success' to 'default' as it's one of the allowed variants
           variant: 'default',
         });
         setShowNewProjectDialog(false);
@@ -88,17 +87,19 @@ export function ProjectsSearchFilter({
       </Button>
       
       <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
-        <DialogContent className="w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-6 w-[90vw]">
           <DialogHeader>
             <DialogTitle>{t('newProject')}</DialogTitle>
             <DialogDescription>
               {t('fillProjectDetails')}
             </DialogDescription>
           </DialogHeader>
-          <ProjectForm 
-            onSubmit={handleCreateProject} 
-            onCancel={() => setShowNewProjectDialog(false)} 
-          />
+          <div className="mt-4">
+            <ProjectForm 
+              onSubmit={handleCreateProject} 
+              onCancel={() => setShowNewProjectDialog(false)} 
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

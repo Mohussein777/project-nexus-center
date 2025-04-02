@@ -21,11 +21,11 @@ export const getProjects = async (): Promise<Project[]> => {
     project_number: project.project_number || '',
     client: project.clients?.name || 'N/A',
     status: project.status,
-    progress: project.progress || 0, // Default to 0 if not available
+    progress: 0, // Default since progress is not in the database yet
     deadline: project.end_date || 'N/A',
     team: 0, // Will count team members below
-    priority: project.priority || 'Medium',
-    tag: project.tag || ''
+    priority: 'Medium', // Default since priority is not in the database yet
+    tag: project.description?.substring(0, 10) || '' // Using part of description as tag temporarily
   }));
 };
 
@@ -56,11 +56,11 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
     project_number: data.project_number || '',
     client: data.clients?.name || 'N/A',
     status: data.status,
-    progress: data.progress || 0,
+    progress: 0, // Default since progress is not in the database yet
     deadline: data.end_date || 'N/A',
     team: count || 0,
-    priority: data.priority || 'Medium',
-    tag: data.tag || ''
+    priority: 'Medium', // Default since priority is not in the database yet
+    tag: data.description?.substring(0, 10) || '' // Using part of description as tag temporarily
   };
 };
 
@@ -76,22 +76,25 @@ export const createProject = async (project: {
   priority?: string;
   tag?: string;
 }): Promise<Project | null> => {
+  // Filter out properties not in the database schema
+  const { priority, tag, ...projectData } = project;
+  
   // Convert Date objects to strings if needed
-  const projectData = {
-    ...project,
-    start_date: project.start_date instanceof Date 
-      ? project.start_date.toISOString() 
-      : project.start_date,
-    end_date: project.end_date instanceof Date 
-      ? project.end_date.toISOString() 
-      : project.end_date,
+  const cleanProjectData = {
+    ...projectData,
+    start_date: projectData.start_date instanceof Date 
+      ? projectData.start_date.toISOString() 
+      : projectData.start_date,
+    end_date: projectData.end_date instanceof Date 
+      ? projectData.end_date.toISOString() 
+      : projectData.end_date,
   };
 
-  console.log('Creating project with data:', projectData);
+  console.log('Creating project with data:', cleanProjectData);
 
   const { data, error } = await supabase
     .from('projects')
-    .insert(projectData)
+    .insert(cleanProjectData)
     .select()
     .single();
 
@@ -115,11 +118,11 @@ export const createProject = async (project: {
     project_number: data.project_number || '',
     client: client?.name || 'N/A',
     status: data.status,
-    progress: 0, // Default to 0 if not available
+    progress: 0, // Default value
     deadline: data.end_date || 'N/A',
     team: 0,
     priority: project.priority || 'Medium',
-    tag: project.tag || ''
+    tag: project.tag || data.description?.substring(0, 10) || ''
   };
 };
 

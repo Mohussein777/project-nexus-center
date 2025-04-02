@@ -7,24 +7,28 @@ import { ViewToggle } from './ViewToggle';
 import { ProjectsGridView } from './ProjectsGridView';
 import { ProjectsListView } from './ProjectsListView';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export function ProjectsOverview() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getProjects();
       setProjects(data);
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
+    } catch (err) {
+      console.error('Failed to fetch projects:', err);
+      setError(t('errorLoadingProjects'));
       toast({
         title: t('error'),
         description: t('errorLoadingProjects'),
@@ -62,6 +66,14 @@ export function ProjectsOverview() {
           <h2 className="font-semibold">{t('allProjects')} ({filteredProjects.length})</h2>
           <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
+        
+        {error && (
+          <Alert variant="destructive" className="m-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{t('error')}</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         
         {loading ? (
           <div className="flex justify-center items-center p-12">
