@@ -2,6 +2,7 @@
 export interface Project {
   id: number;
   name: string;
+  project_number?: string;
   client: string;
   status: string;
   progress: number;

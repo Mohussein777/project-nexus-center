@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Client {
   id: number;
@@ -40,6 +41,7 @@ interface Client {
 
 const formSchema = z.object({
   name: z.string().min(1, "اسم المشروع مطلوب"),
+  project_number: z.string().optional(),
   description: z.string().optional(),
   client_id: z.coerce.number().min(1, "يرجى اختيار عميل"),
   status: z.string().min(1, "حالة المشروع مطلوبة"),
@@ -64,11 +66,13 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t, language } = useLanguage();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || "",
+      project_number: initialData?.project_number || "",
       description: initialData?.description || "",
       client_id: initialData?.client_id || undefined,
       status: initialData?.status || "On Track",
@@ -96,15 +100,15 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
       } catch (error) {
         console.error('Error fetching clients:', error);
         toast({
-          title: "خطأ",
-          description: "فشل في تحميل بيانات العملاء",
+          title: t('error'),
+          description: t('errorLoadingClients'),
           variant: "destructive",
         });
       }
     };
     
     fetchClients();
-  }, [toast]);
+  }, [toast, t]);
   
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
@@ -125,9 +129,23 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>اسم المشروع</FormLabel>
+              <FormLabel>{t('projectName')}</FormLabel>
               <FormControl>
-                <Input placeholder="أدخل اسم المشروع" {...field} />
+                <Input placeholder={language === 'ar' ? "أدخل اسم المشروع" : "Enter project name"} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="project_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('projectNumber')}</FormLabel>
+              <FormControl>
+                <Input placeholder={language === 'ar' ? "أدخل رقم المشروع" : "Enter project number"} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -139,9 +157,9 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>وصف المشروع</FormLabel>
+              <FormLabel>{t('projectDescription')}</FormLabel>
               <FormControl>
-                <Textarea placeholder="أدخل وصف المشروع" {...field} />
+                <Textarea placeholder={language === 'ar' ? "أدخل وصف المشروع" : "Enter project description"} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -153,14 +171,14 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
           name="client_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>العميل</FormLabel>
+              <FormLabel>{t('client')}</FormLabel>
               <Select 
                 onValueChange={(value) => field.onChange(parseInt(value))}
                 value={field.value?.toString() || ""}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر عميل" />
+                    <SelectValue placeholder={t('selectClient')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -181,20 +199,20 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>حالة المشروع</FormLabel>
+              <FormLabel>{t('status')}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر حالة المشروع" />
+                    <SelectValue placeholder={t('selectStatus')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Planning">تخطيط</SelectItem>
-                  <SelectItem value="On Track">في المسار الصحيح</SelectItem>
-                  <SelectItem value="At Risk">في خطر</SelectItem>
-                  <SelectItem value="Delayed">متأخر</SelectItem>
-                  <SelectItem value="On Hold">معلق</SelectItem>
-                  <SelectItem value="Completed">مكتمل</SelectItem>
+                  <SelectItem value="Planning">{t('planning')}</SelectItem>
+                  <SelectItem value="On Track">{t('onTrack')}</SelectItem>
+                  <SelectItem value="At Risk">{t('atRisk')}</SelectItem>
+                  <SelectItem value="Delayed">{t('delayed')}</SelectItem>
+                  <SelectItem value="On Hold">{t('onHold')}</SelectItem>
+                  <SelectItem value="Completed">{t('completed')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -208,7 +226,7 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
             name="start_date"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>تاريخ البدء</FormLabel>
+                <FormLabel>{t('startDate')}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -222,7 +240,7 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>اختر تاريخ</span>
+                          <span>{t('selectDate')}</span>
                         )}
                         <CalendarIcon className="mr-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -247,7 +265,7 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
             name="end_date"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>تاريخ الانتهاء</FormLabel>
+                <FormLabel>{t('endDate')}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -261,7 +279,7 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>اختر تاريخ</span>
+                          <span>{t('selectDate')}</span>
                         )}
                         <CalendarIcon className="mr-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -288,9 +306,9 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
             name="budget"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الميزانية</FormLabel>
+                <FormLabel>{t('budget')}</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="أدخل الميزانية" {...field} />
+                  <Input type="number" placeholder={language === 'ar' ? "أدخل الميزانية" : "Enter budget"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -302,18 +320,18 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الأولوية</FormLabel>
+                <FormLabel>{t('priority')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="اختر الأولوية" />
+                      <SelectValue placeholder={t('selectPriority')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Low">منخفضة</SelectItem>
-                    <SelectItem value="Medium">متوسطة</SelectItem>
-                    <SelectItem value="High">عالية</SelectItem>
-                    <SelectItem value="Urgent">عاجلة</SelectItem>
+                    <SelectItem value="Low">{t('low')}</SelectItem>
+                    <SelectItem value="Medium">{t('medium')}</SelectItem>
+                    <SelectItem value="High">{t('high')}</SelectItem>
+                    <SelectItem value="Urgent">{t('urgent')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -327,19 +345,19 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
           name="tag"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>نوع المشروع</FormLabel>
+              <FormLabel>{t('projectType')}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر نوع المشروع" />
+                    <SelectValue placeholder={t('selectProjectType')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Development">تطوير برمجي</SelectItem>
-                  <SelectItem value="Design">تصميم</SelectItem>
-                  <SelectItem value="Marketing">تسويق</SelectItem>
-                  <SelectItem value="Research">بحث</SelectItem>
-                  <SelectItem value="Consulting">استشارة</SelectItem>
+                  <SelectItem value="Development">{t('development')}</SelectItem>
+                  <SelectItem value="Design">{t('design')}</SelectItem>
+                  <SelectItem value="Marketing">{t('marketing')}</SelectItem>
+                  <SelectItem value="Research">{t('research')}</SelectItem>
+                  <SelectItem value="Consulting">{t('consulting')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -349,10 +367,10 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
-            إلغاء
+            {t('cancel')}
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "جاري الحفظ..." : initialData ? "تحديث المشروع" : "إنشاء المشروع"}
+            {loading ? t('saving') : initialData ? t('updateProject') : t('createProject')}
           </Button>
         </div>
       </form>

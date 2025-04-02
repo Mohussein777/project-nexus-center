@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/components/projects/types";
+import { useToast } from '@/hooks/use-toast';
 
 export const getProjects = async (): Promise<Project[]> => {
   const { data, error } = await supabase
@@ -17,13 +18,14 @@ export const getProjects = async (): Promise<Project[]> => {
   return data.map(project => ({
     id: project.id,
     name: project.name,
+    project_number: project.project_number || '',
     client: project.clients?.name || 'N/A',
     status: project.status,
-    progress: 0, // Default value since it's not in the database
+    progress: project.progress || 0, 
     deadline: project.end_date || 'N/A',
     team: 0, // Will count team members below
-    priority: 'Medium', // Default since it's not in the database
-    tag: '' // Default since it's not in the database
+    priority: project.priority || 'Medium',
+    tag: project.tag || ''
   }));
 };
 
@@ -51,6 +53,7 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
   return {
     id: data.id,
     name: data.name,
+    project_number: data.project_number || '',
     client: data.clients?.name || 'N/A',
     status: data.status,
     progress: 0, // Default value since it's not in the database
@@ -63,18 +66,32 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
 
 export const createProject = async (project: {
   name: string;
+  project_number?: string;
   description?: string;
   client_id: number;
   status: string;
-  start_date: string;
-  end_date?: string;
+  start_date: string | Date;
+  end_date?: string | Date;
   budget?: number;
   priority?: string;
   tag?: string;
 }): Promise<Project | null> => {
+  // Convert Date objects to strings if needed
+  const projectData = {
+    ...project,
+    start_date: project.start_date instanceof Date 
+      ? project.start_date.toISOString() 
+      : project.start_date,
+    end_date: project.end_date instanceof Date 
+      ? project.end_date.toISOString() 
+      : project.end_date,
+  };
+
+  console.log('Creating project with data:', projectData);
+
   const { data, error } = await supabase
     .from('projects')
-    .insert(project)
+    .insert(projectData)
     .select()
     .single();
 
@@ -82,6 +99,8 @@ export const createProject = async (project: {
     console.error('Error creating project:', error);
     return null;
   }
+
+  console.log('Project created successfully:', data);
 
   // Get client name
   const { data: client } = await supabase
@@ -93,6 +112,7 @@ export const createProject = async (project: {
   return {
     id: data.id,
     name: data.name,
+    project_number: data.project_number || '',
     client: client?.name || 'N/A',
     status: data.status,
     progress: 0, // Default to 0 if not available
