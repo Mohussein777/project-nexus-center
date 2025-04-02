@@ -21,7 +21,7 @@ export const getProjects = async (): Promise<Project[]> => {
     project_number: project.project_number || '',
     client: project.clients?.name || 'N/A',
     status: project.status,
-    progress: project.progress || 0, 
+    progress: project.progress || 0, // Default to 0 if not available
     deadline: project.end_date || 'N/A',
     team: 0, // Will count team members below
     priority: project.priority || 'Medium',
@@ -56,11 +56,11 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
     project_number: data.project_number || '',
     client: data.clients?.name || 'N/A',
     status: data.status,
-    progress: 0, // Default value since it's not in the database
+    progress: data.progress || 0,
     deadline: data.end_date || 'N/A',
     team: count || 0,
-    priority: 'Medium', // Default since it's not in the database
-    tag: '' // Default since it's not in the database
+    priority: data.priority || 'Medium',
+    tag: data.tag || ''
   };
 };
 
@@ -118,8 +118,8 @@ export const createProject = async (project: {
     progress: 0, // Default to 0 if not available
     deadline: data.end_date || 'N/A',
     team: 0,
-    priority: 'Medium', // Default to Medium if not available
-    tag: '' // Default to empty string if not available
+    priority: project.priority || 'Medium',
+    tag: project.tag || ''
   };
 };
 

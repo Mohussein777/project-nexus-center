@@ -39,7 +39,8 @@ export function ProjectsSearchFilter({
       if (result) {
         toast({
           title: t('projectCreatedSuccess'),
-          variant: 'success',
+          // Change 'success' to 'default' as it's one of the allowed variants
+          variant: 'default',
         });
         setShowNewProjectDialog(false);
         onProjectCreated();
