@@ -88,7 +88,7 @@ export function ProjectsSearchFilter({
       </Button>
       
       <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="w-full max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('newProject')}</DialogTitle>
             <DialogDescription>

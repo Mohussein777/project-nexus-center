@@ -124,33 +124,35 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('projectName')}</FormLabel>
-              <FormControl>
-                <Input placeholder={language === 'ar' ? "أدخل اسم المشروع" : "Enter project name"} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="project_number"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('projectNumber')}</FormLabel>
-              <FormControl>
-                <Input placeholder={language === 'ar' ? "أدخل رقم المشروع" : "Enter project number"} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('projectName')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={language === 'ar' ? "أدخل اسم المشروع" : "Enter project name"} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="project_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('projectNumber')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={language === 'ar' ? "أدخل رقم المشروع" : "Enter project number"} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <FormField
           control={form.control}
@@ -159,66 +161,72 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
             <FormItem>
               <FormLabel>{t('projectDescription')}</FormLabel>
               <FormControl>
-                <Textarea placeholder={language === 'ar' ? "أدخل وصف المشروع" : "Enter project description"} {...field} />
+                <Textarea 
+                  placeholder={language === 'ar' ? "أدخل وصف المشروع" : "Enter project description"} 
+                  className="h-20" 
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="client_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('client')}</FormLabel>
-              <Select 
-                onValueChange={(value) => field.onChange(parseInt(value))}
-                value={field.value?.toString() || ""}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectClient')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('status')}</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectStatus')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Planning">{t('planning')}</SelectItem>
-                  <SelectItem value="On Track">{t('onTrack')}</SelectItem>
-                  <SelectItem value="At Risk">{t('atRisk')}</SelectItem>
-                  <SelectItem value="Delayed">{t('delayed')}</SelectItem>
-                  <SelectItem value="On Hold">{t('onHold')}</SelectItem>
-                  <SelectItem value="Completed">{t('completed')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="client_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('client')}</FormLabel>
+                <Select 
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  value={field.value?.toString() || ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectClient')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id.toString()}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('status')}</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectStatus')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Planning">{t('planning')}</SelectItem>
+                    <SelectItem value="On Track">{t('onTrack')}</SelectItem>
+                    <SelectItem value="At Risk">{t('atRisk')}</SelectItem>
+                    <SelectItem value="Delayed">{t('delayed')}</SelectItem>
+                    <SelectItem value="On Hold">{t('onHold')}</SelectItem>
+                    <SelectItem value="Completed">{t('completed')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -300,7 +308,7 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="budget"
@@ -338,32 +346,32 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
               </FormItem>
             )}
           />
+          
+          <FormField
+            control={form.control}
+            name="tag"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('projectType')}</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectProjectType')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Development">{t('development')}</SelectItem>
+                    <SelectItem value="Design">{t('design')}</SelectItem>
+                    <SelectItem value="Marketing">{t('marketing')}</SelectItem>
+                    <SelectItem value="Research">{t('research')}</SelectItem>
+                    <SelectItem value="Consulting">{t('consulting')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        
-        <FormField
-          control={form.control}
-          name="tag"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('projectType')}</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectProjectType')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Development">{t('development')}</SelectItem>
-                  <SelectItem value="Design">{t('design')}</SelectItem>
-                  <SelectItem value="Marketing">{t('marketing')}</SelectItem>
-                  <SelectItem value="Research">{t('research')}</SelectItem>
-                  <SelectItem value="Consulting">{t('consulting')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>

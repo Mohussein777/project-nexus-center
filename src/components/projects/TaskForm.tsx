@@ -88,8 +88,8 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="name"
@@ -117,7 +117,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               </FormItem>
             )}
           />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="startDate"
@@ -129,9 +131,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <FormControl>
                       <Button
                         variant="outline"
-                        className={
-                          "w-full justify-start text-left font-normal"
-                        }
+                        className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="ml-2 h-4 w-4" />
                         {field.value ? (
@@ -167,9 +167,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                     <FormControl>
                       <Button
                         variant="outline"
-                        className={
-                          "w-full justify-start text-left font-normal"
-                        }
+                        className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="ml-2 h-4 w-4" />
                         {field.value ? (
@@ -193,7 +191,9 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               </FormItem>
             )}
           />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="priority"
@@ -253,7 +253,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
               <FormControl>
                 <Textarea
                   placeholder="وصف تفصيلي للمهمة"
-                  className="h-32"
+                  className="h-24"
                   {...field}
                 />
               </FormControl>
