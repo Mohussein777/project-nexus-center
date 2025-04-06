@@ -1,25 +1,41 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/utils';
 
-export interface FinancialSummary {
-  totalRevenue: number;
-  totalExpenses: number;
-  netProfit: number;
-  pendingInvoices: number;
-  pendingInvoicesCount: number;
-  revenueGrowth: number;
-  expenseGrowth: number;
-  profitGrowth: number;
+export interface FinancialMetric {
+  id: string;
+  title: string;
+  value: string;
+  previousValue: string;
+  change: number;
+  trend: 'up' | 'down' | 'neutral';
+  color: string;
+  description?: string;
 }
 
-export interface MonthlyFinancialData {
-  month: string;
-  revenue: number;
-  expenses: number;
+export interface RevenueData {
+  date: string;
+  amount: number;
+}
+
+export interface ExpenseData {
+  date: string;
+  amount: number;
+}
+
+export interface ProjectFinancial {
+  id: string;
+  projectId: string;
+  projectName: string;
+  budget: number;
+  spent: number;
+  progress: number;
+  status: 'On Track' | 'At Risk' | 'Over Budget';
 }
 
 export interface Invoice {
-  id: number;
+  id: string;
   number: string;
   clientName: string;
   dueDate: string;
@@ -27,305 +43,343 @@ export interface Invoice {
   status: 'Paid' | 'Pending' | 'Overdue';
 }
 
-export interface ProjectFinancial {
-  projectName: string;
-  clientName: string;
-  budget: number;
-  spent: number;
-  remaining: number;
-  status: 'On Budget' | 'At Risk' | 'Over Budget';
+export async function getFinancialSummary(): Promise<{
+  totalRevenue: number;
+  totalExpenses: number;
+  totalProfit: number;
   profitMargin: number;
-}
-
-export const getFinancialSummary = async (period: string = 'month'): Promise<FinancialSummary> => {
-  // Get current date and calculate start date based on period
-  const now = new Date();
-  let startDate = new Date();
-  
-  switch (period) {
-    case 'week':
-      startDate.setDate(now.getDate() - 7);
-      break;
-    case 'month':
-      startDate.setMonth(now.getMonth() - 1);
-      break;
-    case 'quarter':
-      startDate.setMonth(now.getMonth() - 3);
-      break;
-    case 'year':
-      startDate.setFullYear(now.getFullYear() - 1);
-      break;
-  }
-  
-  const startDateStr = startDate.toISOString().split('T')[0];
-  
+}> {
   try {
-    // Get sum of all credits (revenue) for the period
+    // Get revenue (credits)
     const { data: revenueData, error: revenueError } = await supabase
       .from('financial_transactions')
       .select('credit')
-      .gte('date', startDateStr)
-      .not('credit', 'eq', 0);
+      .not('credit', 'is', null);
 
     if (revenueError) throw revenueError;
 
-    // Get sum of all debits (expenses) for the period
-    const { data: expensesData, error: expensesError } = await supabase
+    // Get expenses (debits)
+    const { data: expenseData, error: expenseError } = await supabase
       .from('financial_transactions')
       .select('debit')
-      .gte('date', startDateStr)
-      .not('debit', 'eq', 0);
+      .not('debit', 'is', null);
 
-    if (expensesError) throw expensesError;
+    if (expenseError) throw expenseError;
 
-    // Calculate totals
-    const totalRevenue = revenueData.reduce((sum, item) => sum + (parseFloat(item.credit) || 0), 0);
-    const totalExpenses = expensesData.reduce((sum, item) => sum + (parseFloat(item.debit) || 0), 0);
-    const netProfit = totalRevenue - totalExpenses;
-
-    // Get pending invoices from project_financials
-    const { data: projectFinancials, error: projectFinancialsError } = await supabase
-      .from('project_financials')
-      .select('balance_client');
-
-    if (projectFinancialsError) throw projectFinancialsError;
-
-    const pendingInvoices = projectFinancials.reduce((sum, item) => sum + (parseFloat(item.balance_client) || 0), 0);
-    const pendingInvoicesCount = projectFinancials.filter(item => parseFloat(item.balance_client) > 0).length;
-
-    // Calculate growth rates (randomly for now, would need comparison data in a real scenario)
-    const revenueGrowth = 12.5;
-    const expenseGrowth = 8.3;
-    const profitGrowth = 15.2;
+    const totalRevenue = revenueData.reduce((sum, item) => sum + (item.credit || 0), 0);
+    const totalExpenses = expenseData.reduce((sum, item) => sum + (item.debit || 0), 0);
+    const totalProfit = totalRevenue - totalExpenses;
+    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
     return {
       totalRevenue,
       totalExpenses,
-      netProfit,
-      pendingInvoices,
-      pendingInvoicesCount,
-      revenueGrowth,
-      expenseGrowth,
-      profitGrowth
+      totalProfit,
+      profitMargin
     };
   } catch (error) {
     console.error('Error fetching financial summary:', error);
-    throw error;
+    return {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      totalProfit: 0,
+      profitMargin: 0
+    };
   }
-};
+}
 
-export const getMonthlyFinancialData = async (): Promise<MonthlyFinancialData[]> => {
-  // We'll generate monthly data for the past 12 months based on actual transactions
-  const months = [];
-  const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({
-      date: month,
-      monthStr: month.toLocaleString('ar-SA', { month: 'short' })
-    });
-  }
-  
+export async function getFinancialMetrics(): Promise<FinancialMetric[]> {
   try {
-    // Get all financial transactions for the past 12 months
-    const startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString().split('T')[0];
-    
-    const { data: transactions, error } = await supabase
-      .from('financial_transactions')
-      .select('date, credit, debit')
-      .gte('date', startDate);
-    
-    if (error) throw error;
-    
-    // Process transactions by month
-    return months.map(({ date, monthStr }) => {
-      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      
-      const monthTransactions = transactions.filter(t => {
-        const txDate = new Date(t.date);
-        return txDate >= monthStart && txDate <= monthEnd;
-      });
-      
-      const revenue = monthTransactions.reduce((sum, t) => sum + (parseFloat(t.credit) || 0), 0);
-      const expenses = monthTransactions.reduce((sum, t) => sum + (parseFloat(t.debit) || 0), 0);
-      
-      return {
-        month: monthStr,
-        revenue,
-        expenses
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching monthly financial data:', error);
-    // Return mock data as fallback
-    return months.map(({ monthStr }) => ({
-      month: monthStr,
-      revenue: Math.floor(Math.random() * 50000) + 20000,
-      expenses: Math.floor(Math.random() * 30000) + 10000
-    }));
-  }
-};
+    const { totalRevenue, totalExpenses, totalProfit, profitMargin } = await getFinancialSummary();
 
-export const getRecentInvoices = async (): Promise<Invoice[]> => {
-  try {
-    // Get project financials as "invoices"
-    const { data: projectFinancials, error } = await supabase
-      .from('project_financials')
-      .select('id, project_id, balance_client, created_at, updated_at')
-      .order('updated_at', { ascending: false })
-      .limit(4);
-      
-    if (error) throw error;
-    
-    // Get project details for each financial record
-    const projectIds = projectFinancials.map(pf => pf.project_id);
-    
-    const { data: projects, error: projectsError } = await supabase
-      .from('projects')
-      .select('id, name, client_id')
-      .in('id', projectIds);
-      
-    if (projectsError) throw projectsError;
-    
-    // Get client names
-    const clientIds = projects.map(p => p.client_id);
-    
-    const { data: clients, error: clientsError } = await supabase
-      .from('clients')
-      .select('id, name')
-      .in('id', clientIds);
-      
-    if (clientsError) throw clientsError;
-    
-    // Map all data together into invoices
-    return projectFinancials.map((pf, index) => {
-      const project = projects.find(p => p.id === pf.project_id);
-      const client = project ? clients.find(c => c.id === project.client_id) : null;
-      
-      // Calculate a due date (30 days from the last update)
-      const updatedDate = new Date(pf.updated_at);
-      const dueDate = new Date(updatedDate);
-      dueDate.setDate(dueDate.getDate() + 30);
-      
-      // Determine status based on days since update
-      const now = new Date();
-      const daysSinceUpdate = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      let status: 'Paid' | 'Pending' | 'Overdue' = 'Pending';
-      if (parseFloat(pf.balance_client) === 0) {
-        status = 'Paid';
-      } else if (daysSinceUpdate > 30) {
-        status = 'Overdue';
-      }
-      
-      return {
-        id: pf.id,
-        number: `INV-${new Date().getFullYear()}-${String(index + 100).slice(1)}`,
-        clientName: client ? client.name : 'غير معروف',
-        dueDate: dueDate.toLocaleDateString('ar-SA'),
-        amount: parseFloat(pf.balance_client) || 0,
-        status
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching recent invoices:', error);
-    // Return mock data as fallback
+    // For a real app, you would compare with previous period data
+    // Here we're just showing example data
     return [
       {
-        id: 1,
-        number: 'INV-2023-056',
-        clientName: 'Al Madina Group',
-        dueDate: 'Jun 15, 2023',
-        amount: 24500,
-        status: 'Pending'
+        id: '1',
+        title: 'الإيرادات',
+        value: formatCurrency(totalRevenue.toString()),
+        previousValue: formatCurrency('120000'),
+        change: 12.5,
+        trend: 'up',
+        color: 'bg-green-500',
+        description: 'إجمالي الإيرادات'
       },
       {
-        id: 2,
-        number: 'INV-2023-055',
-        clientName: 'Gulf Developers',
-        dueDate: 'Jun 12, 2023',
-        amount: 18750,
-        status: 'Paid'
+        id: '2',
+        title: 'المصروفات',
+        value: formatCurrency(totalExpenses.toString()),
+        previousValue: formatCurrency('75000'),
+        change: -5.2,
+        trend: 'down',
+        color: 'bg-red-500',
+        description: 'إجمالي المصروفات'
       },
       {
-        id: 3,
-        number: 'INV-2023-054',
-        clientName: 'Al Hamra Real Estate',
-        dueDate: 'Jun 10, 2023',
-        amount: 32800,
-        status: 'Overdue'
+        id: '3',
+        title: 'الأرباح',
+        value: formatCurrency(totalProfit.toString()),
+        previousValue: formatCurrency('45000'),
+        change: 28.3,
+        trend: 'up',
+        color: 'bg-blue-500',
+        description: 'إجمالي الأرباح'
       },
       {
-        id: 4,
-        number: 'INV-2023-053',
-        clientName: 'Ministry of Technology',
-        dueDate: 'Jun 8, 2023',
-        amount: 45000,
-        status: 'Paid'
+        id: '4',
+        title: 'هامش الربح',
+        value: `${profitMargin.toFixed(1)}%`,
+        previousValue: '35.5%',
+        change: 4.8,
+        trend: 'up',
+        color: 'bg-purple-500',
+        description: 'نسبة الربح من الإيرادات'
       }
     ];
+  } catch (error) {
+    console.error('Error fetching financial metrics:', error);
+    return [];
   }
-};
+}
 
-export const getProjectsProfitability = async (): Promise<ProjectFinancial[]> => {
+export async function getRevenueExpenseData(): Promise<{
+  revenue: RevenueData[];
+  expenses: ExpenseData[];
+}> {
   try {
-    // Get project financials and join with projects
-    const { data: projectFinancials, error } = await supabase
+    // Get transactions grouped by month
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .select('date, credit, debit')
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+
+    // Process the data to group by month
+    const monthlyData = data.reduce((acc: any, transaction) => {
+      const monthYear = format(new Date(transaction.date), 'MMM yyyy');
+      
+      if (!acc[monthYear]) {
+        acc[monthYear] = {
+          revenue: 0,
+          expenses: 0
+        };
+      }
+      
+      if (transaction.credit) {
+        acc[monthYear].revenue += transaction.credit;
+      }
+      
+      if (transaction.debit) {
+        acc[monthYear].expenses += transaction.debit;
+      }
+      
+      return acc;
+    }, {});
+
+    // Convert to arrays for charts
+    const revenue: RevenueData[] = [];
+    const expenses: ExpenseData[] = [];
+
+    Object.entries(monthlyData).forEach(([month, data]: [string, any]) => {
+      revenue.push({
+        date: month,
+        amount: data.revenue
+      });
+      
+      expenses.push({
+        date: month,
+        amount: data.expenses
+      });
+    });
+
+    return { revenue, expenses };
+  } catch (error) {
+    console.error('Error fetching revenue/expense data:', error);
+    
+    // Return mock data if there's an error
+    const mockMonths = ['Jan 2023', 'Feb 2023', 'Mar 2023', 'Apr 2023', 'May 2023', 'Jun 2023'];
+    
+    return {
+      revenue: mockMonths.map((month, index) => ({
+        date: month,
+        amount: Math.floor(Math.random() * 50000) + 20000
+      })),
+      expenses: mockMonths.map((month, index) => ({
+        date: month,
+        amount: Math.floor(Math.random() * 30000) + 15000
+      }))
+    };
+  }
+}
+
+export async function getProjectFinancials(): Promise<ProjectFinancial[]> {
+  try {
+    const { data, error } = await supabase
       .from('project_financials')
       .select(`
         id,
         project_id,
         total_deal,
         total_payment,
-        deserved_amount,
-        balance_client,
         project_progress,
-        projects (
-          id,
-          name,
-          client_id,
-          clients (
-            id,
-            name
-          )
-        )
-      `);
-      
+        projects(name)
+      `)
+      .limit(5);
+
     if (error) throw error;
-    
-    return projectFinancials.map(pf => {
-      // Calculate values
-      const budget = parseFloat(pf.total_deal) || 0;
-      const spent = parseFloat(pf.total_payment) || 0;
-      const remaining = budget - spent;
+
+    return data.map((item) => {
+      const budget = item.total_deal || 0;
+      const spent = item.total_payment || 0;
+      const progress = item.project_progress || 0;
       
-      // Determine budget status
-      let status: 'On Budget' | 'At Risk' | 'Over Budget' = 'On Budget';
-      const progressPercentage = parseFloat(pf.project_progress) || 0;
+      let status: 'On Track' | 'At Risk' | 'Over Budget' = 'On Track';
       
-      if (progressPercentage < 100 && spent > budget * 0.9) {
-        status = 'At Risk';
-      } else if (spent > budget) {
+      if (spent > budget) {
         status = 'Over Budget';
+      } else if (spent / budget > 0.9 && progress < 0.9) {
+        status = 'At Risk';
       }
       
-      // Calculate profit margin (simplified)
-      const profitMargin = budget > 0 ? Math.round(((budget - spent) / budget) * 100) : 0;
-      
       return {
-        projectName: pf.projects?.name || 'غير معروف',
-        clientName: pf.projects?.clients?.name || 'غير معروف',
+        id: item.id,
+        projectId: item.project_id ? item.project_id.toString() : '0',
+        projectName: item.projects?.name || 'Unknown Project',
         budget,
         spent,
-        remaining,
-        status,
-        profitMargin: Math.max(0, profitMargin) // Ensure positive value
+        progress,
+        status
       };
     });
   } catch (error) {
-    console.error('Error fetching projects profitability:', error);
-    // Return empty array as fallback
+    console.error('Error fetching project financials:', error);
     return [];
   }
-};
+}
+
+export async function getInvoices(): Promise<Invoice[]> {
+  try {
+    // In a real app, this would fetch from a database table
+    // For now, just return mock data
+    const mockInvoices = [
+      {
+        id: '1',
+        number: 'INV-2023-001',
+        clientName: 'شركة النخبة للمقاولات',
+        dueDate: '2023-06-15',
+        amount: 15000,
+        status: 'Paid' as const
+      },
+      {
+        id: '2',
+        number: 'INV-2023-002',
+        clientName: 'مؤسسة الإعمار للتطوير',
+        dueDate: '2023-06-25',
+        amount: 8500,
+        status: 'Pending' as const
+      },
+      {
+        id: '3',
+        number: 'INV-2023-003',
+        clientName: 'شركة البناء الحديث',
+        dueDate: '2023-06-10',
+        amount: 12000,
+        status: 'Overdue' as const
+      },
+      {
+        id: '4',
+        number: 'INV-2023-004',
+        clientName: 'مجموعة المستقبل',
+        dueDate: '2023-07-05',
+        amount: 9000,
+        status: 'Pending' as const
+      }
+    ];
+    
+    return mockInvoices;
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    return [];
+  }
+}
+
+export async function getRecentTransactions(): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .select(`
+        id,
+        date,
+        operation_type,
+        description,
+        recipient,
+        credit,
+        debit,
+        project_name
+      `)
+      .order('date', { ascending: false })
+      .limit(5);
+
+    if (error) throw error;
+
+    return data.map((transaction) => {
+      const amount = transaction.credit || transaction.debit || 0;
+      const isIncome = transaction.credit !== null && transaction.credit > 0;
+      
+      return {
+        id: transaction.id,
+        date: format(new Date(transaction.date), 'dd/MM/yyyy'),
+        type: transaction.operation_type,
+        description: transaction.description || 'No description',
+        recipient: transaction.recipient || 'Not specified',
+        amount: formatCurrency(amount.toString()),
+        isIncome,
+        project: transaction.project_name || '-'
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching recent transactions:', error);
+    return [];
+  }
+}
+
+export async function getTopClients(): Promise<any[]> {
+  try {
+    // Group transactions by client and calculate total
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .select('client, credit')
+      .not('client', 'is', null)
+      .not('credit', 'is', null);
+
+    if (error) throw error;
+
+    const clientTotals: Record<string, number> = {};
+    
+    data.forEach((transaction) => {
+      if (transaction.client && transaction.credit) {
+        if (!clientTotals[transaction.client]) {
+          clientTotals[transaction.client] = 0;
+        }
+        clientTotals[transaction.client] += transaction.credit;
+      }
+    });
+
+    // Convert to array, sort by total, and take top 5
+    const topClients = Object.entries(clientTotals)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+
+    return topClients.map((client, index) => ({
+      id: index.toString(),
+      name: client.name,
+      total: formatCurrency(client.total.toString()),
+      percentage: client.total / topClients.reduce((sum, c) => sum + c.total, 0) * 100
+    }));
+  } catch (error) {
+    console.error('Error fetching top clients:', error);
+    return [];
+  }
+}

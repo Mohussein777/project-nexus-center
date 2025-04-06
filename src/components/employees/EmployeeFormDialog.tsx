@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -36,6 +35,7 @@ interface EmployeeFormDialogProps {
 
 export function EmployeeFormDialog({ open, onOpenChange, onEmployeeAdded }: EmployeeFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<EmployeeFormValues>({
@@ -54,23 +54,15 @@ export function EmployeeFormDialog({ open, onOpenChange, onEmployeeAdded }: Empl
     },
   });
 
-  const onSubmit = async (values: EmployeeFormValues) => {
+  const handleSubmit = async (data: Omit<Employee, "id" | "color" | "projects" | "avatar">) => {
+    setIsLoading(true);
     try {
-      setIsSubmitting(true);
+      const employeeData = {
+        ...data,
+        joinDate: data.joinDate,
+      };
       
-      // Fix the type issue by ensuring all required fields are present
-      const newEmployee = await createEmployee({
-        name: values.name,
-        position: values.position,
-        email: values.email,
-        phone: values.phone || '',
-        department: values.department,
-        join_date: values.joinDate,
-        status: values.status,
-        employee_id: values.employeeId || '',
-        manager: values.manager || '',
-        skills: values.skills || [],
-      });
+      const newEmployee = await createEmployee(employeeData);
       
       toast({
         title: "تم بنجاح",
@@ -91,7 +83,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onEmployeeAdded }: Empl
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -106,7 +98,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onEmployeeAdded }: Empl
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}

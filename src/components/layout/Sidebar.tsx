@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, Briefcase, Users, User, BarChart4, Settings } from 'lucide-react';

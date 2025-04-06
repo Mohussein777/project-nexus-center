@@ -1,315 +1,260 @@
-
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/lib/utils';
 
 export interface FinancialTransaction {
   id: string;
   date: string;
-  project_id?: number;
-  project_number?: string;
-  project_name?: string;
-  client?: string;
   account_type: string;
-  safe?: string;
-  recipient?: string;
-  operation_type: 'PAYMENT' | 'DEPOSIT';
-  debit?: number;
-  credit?: number;
+  operation_type: string;
   description?: string;
-}
-
-export interface AccountType {
-  id: string;
-  name: string;
-}
-
-export interface Safe {
-  id: string;
-  name: string;
-}
-
-export interface ProjectFinancialSummary {
-  project_id: number;
-  project_name: string;
-  project_number?: string;
-  client_name: string;
-  total_deal: number;
-  total_payment: number;
-  deserved_amount: number;
-  balance_client: number;
-  project_progress: number;
-}
-
-export const getFinancialTransactions = async (filters?: {
-  startDate?: string;
-  endDate?: string;
-  projectId?: number;
-  accountType?: string;
+  recipient?: string;
+  credit?: number;
+  debit?: number;
+  project_name?: string;
   safe?: string;
-}): Promise<FinancialTransaction[]> => {
-  let query = supabase
-    .from('financial_transactions')
-    .select('*')
-    .order('date', { ascending: false });
+  client?: string;
+}
 
-  if (filters) {
-    if (filters.startDate) {
-      query = query.gte('date', filters.startDate);
+export interface FinancialTransactionStats {
+  totalTransactions: number;
+  totalIncome: string;
+  totalExpenses: string;
+  accountBalances: { account_type: string; balance: string; }[];
+}
+
+export interface MonthlyFinancialData {
+  month: string;
+  totalIncome: string;
+  totalExpenses: string;
+  incomeChange: number;
+  expenseChange: number;
+}
+
+export const getFinancialTransactionStats = async () => {
+  try {
+    const { data: transactionsCount, error: transactionsCountError } = await supabase
+      .from('financial_transactions')
+      .select('*', { count: 'exact' });
+
+    if (transactionsCountError) {
+      throw transactionsCountError;
     }
-    if (filters.endDate) {
-      query = query.lte('date', filters.endDate);
+
+    const { data: totalIncomeData, error: totalIncomeError } = await supabase
+      .from('financial_transactions')
+      .select('credit')
+      .not('credit', 'is', null);
+
+    if (totalIncomeError) {
+      throw totalIncomeError;
     }
-    if (filters.projectId) {
-      query = query.eq('project_id', filters.projectId);
+
+    const totalIncome = totalIncomeData?.reduce((sum, transaction) => sum + (transaction.credit || 0), 0) || 0;
+
+    const { data: totalExpensesData, error: totalExpensesError } = await supabase
+      .from('financial_transactions')
+      .select('debit')
+      .not('debit', 'is', null);
+
+    if (totalExpensesError) {
+      throw totalExpensesError;
     }
-    if (filters.accountType) {
-      query = query.eq('account_type', filters.accountType);
+
+    const totalExpenses = totalExpensesData?.reduce((sum, transaction) => sum + (transaction.debit || 0), 0) || 0;
+
+    const { data: accountBalances, error: accountBalancesError } = await supabase
+      .from('financial_transactions')
+      .select('account_type, credit, debit');
+
+    if (accountBalancesError) {
+      throw accountBalancesError;
     }
-    if (filters.safe) {
-      query = query.eq('safe', filters.safe);
-    }
-  }
 
-  const { data, error } = await query;
+    const accountBalancesMap: { [key: string]: number } = {};
 
-  if (error) {
-    console.error('Error fetching financial transactions:', error);
-    throw error;
-  }
+    accountBalances?.forEach(transaction => {
+      if (transaction.account_type) {
+        if (!accountBalancesMap[transaction.account_type]) {
+          accountBalancesMap[transaction.account_type] = 0;
+        }
+        accountBalancesMap[transaction.account_type] += (transaction.credit || 0) - (transaction.debit || 0);
+      }
+    });
 
-  // Ensure correct typing by mapping the data
-  return (data || []).map(transaction => ({
-    ...transaction,
-    operation_type: transaction.operation_type as 'PAYMENT' | 'DEPOSIT'
-  }));
-};
-
-export const addFinancialTransaction = async (transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> => {
-  const { data, error } = await supabase
-    .from('financial_transactions')
-    .insert(transaction)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error adding financial transaction:', error);
-    throw error;
-  }
-
-  return {
-    ...data,
-    operation_type: data.operation_type as 'PAYMENT' | 'DEPOSIT'
-  };
-};
-
-export const updateFinancialTransaction = async (id: string, transaction: Partial<FinancialTransaction>): Promise<FinancialTransaction> => {
-  const { data, error } = await supabase
-    .from('financial_transactions')
-    .update(transaction)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating financial transaction:', error);
-    throw error;
-  }
-
-  return {
-    ...data,
-    operation_type: data.operation_type as 'PAYMENT' | 'DEPOSIT'
-  };
-};
-
-export const deleteFinancialTransaction = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('financial_transactions')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Error deleting financial transaction:', error);
-    throw error;
-  }
-};
-
-export const getAccountTypes = async (): Promise<AccountType[]> => {
-  const { data, error } = await supabase
-    .from('account_types')
-    .select('*')
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching account types:', error);
-    throw error;
-  }
-
-  return data || [];
-};
-
-export const getSafes = async (): Promise<Safe[]> => {
-  const { data, error } = await supabase
-    .from('safes')
-    .select('*')
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching safes:', error);
-    throw error;
-  }
-
-  return data || [];
-};
-
-export const getProjectFinancialSummaries = async (): Promise<ProjectFinancialSummary[]> => {
-  // Join projects with project_financials and clients to get summarized data
-  const { data, error } = await supabase
-    .from('projects')
-    .select(`
-      id,
-      name,
-      project_number,
-      clients:client_id (name),
-      project_financials!project_id (
-        total_deal,
-        total_payment,
-        deserved_amount,
-        balance_client,
-        project_progress
-      )
-    `);
-
-  if (error) {
-    console.error('Error fetching project financial summaries:', error);
-    throw error;
-  }
-
-  // Map and transform the data
-  return (data || []).map(project => {
-    const financials = project.project_financials?.[0] || {
-      total_deal: 0,
-      total_payment: 0,
-      deserved_amount: 0,
-      balance_client: 0,
-      project_progress: 0
-    };
+    const accountBalancesArray = Object.entries(accountBalancesMap).map(([account_type, balance]) => ({
+      account_type,
+      balance
+    }));
 
     return {
-      project_id: project.id,
-      project_name: project.name,
-      project_number: project.project_number,
-      client_name: project.clients?.name || 'N/A',
-      total_deal: financials.total_deal,
-      total_payment: financials.total_payment,
-      deserved_amount: financials.deserved_amount,
-      balance_client: financials.balance_client,
-      project_progress: financials.project_progress
+      totalTransactions: transactionsCount.count || 0,
+      totalIncome: formatCurrency((totalIncome || 0).toString()),
+      totalExpenses: formatCurrency((totalExpenses || 0).toString()),
+      accountBalances: accountBalancesArray.map(account => ({
+        ...account,
+        balance: formatCurrency(account.balance.toString())
+      }))
     };
-  });
+  } catch (error) {
+    console.error("Error fetching financial transaction stats:", error);
+    throw error;
+  }
 };
 
-export const getFinancialsSummary = async (): Promise<{
-  totalRevenue: number;
-  totalExpenses: number;
-  netProfit: number;
-  pendingInvoices: number;
-}> => {
-  // Get sum of all credits (revenue)
-  const { data: revenueData, error: revenueError } = await supabase
-    .from('financial_transactions')
-    .select('credit')
-    .neq('credit', 0);
+export const getFinancialTransactions = async (page: number = 1, pageSize: number = 10, sortBy: string = 'date', sortOrder: string = 'asc', filters: any = {}): Promise<{ data: FinancialTransaction[], count: number }> => {
+  try {
+    let query = supabase
+      .from('financial_transactions')
+      .select('*', { count: 'exact' });
 
-  if (revenueError) {
-    console.error('Error fetching revenue:', revenueError);
-    throw revenueError;
+    // Apply filters
+    Object.entries(filters).forEach(([key, value]: [string, any]) => {
+      if (value) {
+        query = query.eq(key, value);
+      }
+    });
+
+    // Apply sorting
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+    // Apply pagination
+    const startIndex = (page - 1) * pageSize;
+    query = query.range(startIndex, startIndex + pageSize - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return { data: data || [], count: count || 0 };
+  } catch (error) {
+    console.error("Error fetching financial transactions:", error);
+    throw error;
   }
-
-  // Get sum of all debits (expenses)
-  const { data: expensesData, error: expensesError } = await supabase
-    .from('financial_transactions')
-    .select('debit')
-    .neq('debit', 0);
-
-  if (expensesError) {
-    console.error('Error fetching expenses:', expensesError);
-    throw expensesError;
-  }
-
-  // Calculate totals
-  const totalRevenue = revenueData.reduce((sum, item) => sum + (parseFloat(item.credit) || 0), 0);
-  const totalExpenses = expensesData.reduce((sum, item) => sum + (parseFloat(item.debit) || 0), 0);
-  const netProfit = totalRevenue - totalExpenses;
-
-  // Get pending invoices from project_financials
-  const { data: projectFinancials, error: projectFinancialsError } = await supabase
-    .from('project_financials')
-    .select('balance_client');
-
-  if (projectFinancialsError) {
-    console.error('Error fetching project financials:', projectFinancialsError);
-    throw projectFinancialsError;
-  }
-
-  const pendingInvoices = projectFinancials.reduce((sum, item) => sum + (parseFloat(item.balance_client) || 0), 0);
-
-  return {
-    totalRevenue,
-    totalExpenses,
-    netProfit,
-    pendingInvoices
-  };
 };
 
-export const saveProjectFinancials = async (
-  projectId: number, 
-  data: {
-    total_deal?: number;
-    total_payment?: number;
-    deserved_amount?: number;
-    balance_client?: number;
-    project_progress?: number;
-    notes?: string;
-  }
-): Promise<void> => {
-  // Check if project financials record exists
-  const { data: existingData, error: checkError } = await supabase
-    .from('project_financials')
-    .select('id')
-    .eq('project_id', projectId)
-    .maybeSingle();
+export const createFinancialTransaction = async (transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> => {
+  try {
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .insert([transaction])
+      .select()
+      .single();
 
-  if (checkError) {
-    console.error('Error checking project financials:', checkError);
-    throw checkError;
-  }
-
-  if (existingData) {
-    // Update existing record
-    const { error: updateError } = await supabase
-      .from('project_financials')
-      .update({
-        ...data,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', existingData.id);
-
-    if (updateError) {
-      console.error('Error updating project financials:', updateError);
-      throw updateError;
+    if (error) {
+      throw error;
     }
-  } else {
-    // Create new record
-    const { error: insertError } = await supabase
-      .from('project_financials')
-      .insert({
-        project_id: projectId,
-        ...data,
-      });
 
-    if (insertError) {
-      console.error('Error creating project financials:', insertError);
-      throw insertError;
+    return data as FinancialTransaction;
+  } catch (error) {
+    console.error("Error creating financial transaction:", error);
+    throw error;
+  }
+};
+
+export const updateFinancialTransaction = async (id: string, updates: Partial<FinancialTransaction>): Promise<FinancialTransaction | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
     }
+
+    return data as FinancialTransaction;
+  } catch (error) {
+    console.error("Error updating financial transaction:", error);
+    return null;
+  }
+};
+
+export const deleteFinancialTransaction = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('financial_transactions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting financial transaction:", error);
+    return false;
+  }
+};
+
+export const getMonthlyFinancialData = async () => {
+  try {
+    const { data: monthlyData, error: monthlyDataError } = await supabase
+      .from('financial_transactions')
+      .select(`
+        date,
+        credit,
+        debit
+      `);
+
+    if (monthlyDataError) {
+      throw monthlyDataError;
+    }
+
+    const monthlySummary: { [key: string]: { totalIncome: number; totalExpenses: number; } } = {};
+
+    monthlyData.forEach(transaction => {
+      const transactionDate = new Date(transaction.date);
+      const monthYear = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+
+      if (!monthlySummary[monthYear]) {
+        monthlySummary[monthYear] = {
+          totalIncome: 0,
+          totalExpenses: 0,
+        };
+      }
+
+      monthlySummary[monthYear].totalIncome += transaction.credit || 0;
+      monthlySummary[monthYear].totalExpenses += transaction.debit || 0;
+    });
+
+    const monthlyAverages = Object.entries(monthlySummary).map(([month, totals]) => {
+      return {
+        month,
+        totalIncome: totals.totalIncome,
+        totalExpenses: totals.totalExpenses,
+      };
+    });
+
+    let previousMonthIncome = 0;
+    let previousMonthExpense = 0;
+
+    if (monthlyAverages.length > 1) {
+      previousMonthIncome = monthlyAverages[monthlyAverages.length - 2].totalIncome;
+      previousMonthExpense = monthlyAverages[monthlyAverages.length - 2].totalExpenses;
+    }
+
+    const totalIncome = monthlyAverages.length > 0 ? monthlyAverages[monthlyAverages.length - 1].totalIncome : 0;
+    const totalExpenses = monthlyAverages.length > 0 ? monthlyAverages[monthlyAverages.length - 1].totalExpenses : 0;
+
+    const incomeChange = previousMonthIncome !== 0 ? ((totalIncome - previousMonthIncome) / previousMonthIncome) * 100 : 0;
+    const expenseChange = previousMonthExpense !== 0 ? ((totalExpenses - previousMonthExpense) / previousMonthExpense) * 100 : 0;
+
+    const response = {
+      monthlyAverages,
+      totalIncome: formatCurrency(totalIncome.toString()),
+      totalExpenses: formatCurrency(totalExpenses.toString()),
+      incomeChange,
+      expenseChange
+    };
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching monthly financial data:", error);
+    throw error;
   }
 };
