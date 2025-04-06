@@ -147,7 +147,7 @@ export const getFinancialTransactions = async (page: number = 1, pageSize: numbe
   }
 };
 
-// Adding the missing function that's being imported in TransactionFormDialog.tsx
+// Function that was missing in the service
 export const addFinancialTransaction = async (transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> => {
   try {
     const { data, error } = await supabase
@@ -273,7 +273,6 @@ export const getMonthlyFinancialData = async () => {
   }
 };
 
-// Adding additional missing functions
 export const getFinancialsSummary = async () => {
   try {
     const { data: incomeData, error: incomeError } = await supabase
@@ -329,7 +328,7 @@ export const getProjectFinancialSummaries = async (): Promise<ProjectFinancialSu
     // Format the data to include project_name
     return (data || []).map(item => ({
       id: item.id,
-      project_id: item.project_id,
+      project_id: item.project_id || 0,
       project_name: item.projects?.name || 'Unknown Project',
       total_deal: item.total_deal || 0,
       total_payment: item.total_payment || 0,
@@ -345,7 +344,7 @@ export const getProjectFinancialSummaries = async (): Promise<ProjectFinancialSu
 
 export const saveProjectFinancials = async (projectFinancials: Partial<ProjectFinancialSummary>): Promise<ProjectFinancialSummary | null> => {
   try {
-    const { id, ...rest } = projectFinancials;
+    const { id, project_name, ...rest } = projectFinancials;
     
     if (id) {
       // Update existing record
@@ -357,7 +356,12 @@ export const saveProjectFinancials = async (projectFinancials: Partial<ProjectFi
         .single();
       
       if (error) throw error;
-      return data as ProjectFinancialSummary;
+      
+      // Add the project_name back since it's not stored in the database
+      return {
+        ...data,
+        project_name: project_name || 'Unknown Project'
+      } as ProjectFinancialSummary;
     } else {
       // Insert new record
       const { data, error } = await supabase
@@ -367,7 +371,12 @@ export const saveProjectFinancials = async (projectFinancials: Partial<ProjectFi
         .single();
       
       if (error) throw error;
-      return data as ProjectFinancialSummary;
+      
+      // Add the project_name back since it's not stored in the database
+      return {
+        ...data,
+        project_name: project_name || 'Unknown Project'
+      } as ProjectFinancialSummary;
     }
   } catch (error) {
     console.error("Error saving project financials:", error);

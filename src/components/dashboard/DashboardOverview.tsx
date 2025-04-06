@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Briefcase, Users, Clock, Calendar, BarChart4, Layers, CheckCircle, AlertCircle, DollarSign, TrendingUp } from 'lucide-react';
 import { MetricCard } from './MetricCard';
 import { RecentActivity } from './RecentActivity';
-import { getFinancialSummary, getMonthlyFinancialData, getRecentInvoices, getProjectsProfitability } from '@/services/financialService';
+import { getFinancialSummary, getMonthlyFinancialData, getRecentInvoices, getProjectsProfitability } from '@/services/financialDashboardService';
 import { getProjects } from '@/services/projectService';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -88,14 +88,14 @@ export function DashboardOverview() {
         />
         <MetricCard 
           title="إجمالي الإيرادات" 
-          value={financialSummary ? formatCurrency(financialSummary.totalRevenue) : "..."} 
+          value={financialSummary ? formatCurrency(financialSummary.totalRevenue.toString()) : "..."} 
           change={financialSummary ? `${financialSummary.revenueGrowth}% من الشهر الماضي` : undefined} 
           trend="up" 
           icon={<DollarSign size={20} />} 
         />
         <MetricCard 
           title="الفواتير المعلقة" 
-          value={financialSummary ? formatCurrency(financialSummary.pendingInvoices) : "..."} 
+          value={financialSummary ? formatCurrency(financialSummary.pendingInvoices.toString()) : "..."} 
           change={financialSummary ? `${financialSummary.pendingInvoicesCount} فواتير` : undefined} 
           trend="neutral" 
           icon={<Calendar size={20} />} 

@@ -15,11 +15,11 @@ import { supabase } from "@/integrations/supabase/client";
 interface OfficeInfo {
   id: string;
   name: string;
-  address: string;
-  phone: string;
-  email: string;
-  website: string;
-  description: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  description: string | null;
   logo_url: string | null;
 }
 
@@ -54,6 +54,7 @@ export function OfficeSettings() {
     const fetchOfficeInfo = async () => {
       setIsLoading(true);
       try {
+        // Use direct SQL query to get data from office_settings since it's not in the types
         const { data, error } = await supabase
           .from('office_settings')
           .select('*')

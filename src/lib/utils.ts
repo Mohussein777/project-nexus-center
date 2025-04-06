@@ -6,8 +6,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const formatCurrency = (value: string, currency: string = 'SAR') => {
-  const numValue = parseFloat(value);
+export const formatCurrency = (value: string | number, currency: string = 'SAR') => {
+  // Convert to string first if it's a number
+  const stringValue = typeof value === 'number' ? value.toString() : value;
+  const numValue = parseFloat(stringValue);
   if (isNaN(numValue)) return '0 ' + currency;
   
   return numValue.toLocaleString('ar-SA', {

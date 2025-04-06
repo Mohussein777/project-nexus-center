@@ -1,161 +1,118 @@
 
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sun, Moon, Monitor, Check } from "lucide-react";
 
 export function ThemeSettings() {
-  const { t, language, setLanguage } = useLanguage();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [theme, setTheme] = useState('system');
-  const [accentColor, setAccentColor] = useState('blue');
-  const [enableAnimations, setEnableAnimations] = useState(true);
-  const [highContrastMode, setHighContrastMode] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  
-  const handleSaveThemeSettings = async () => {
-    setIsLoading(true);
-    try {
-      // In a real application, this would save the theme settings to the database
-      // For now, we'll just show a success toast
-      toast({
-        title: t('success'),
-        description: t('theme_settings_saved'),
-      });
-    } catch (error) {
-      console.error("Error saving theme settings:", error);
-      toast({
-        title: t('error'),
-        description: t('error_saving_theme_settings'),
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
   };
+
+  const handleLanguageChange = (value: "ar" | "en") => {
+    setLanguage(value);
+  };
+
+  // Wait until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-4">{t('appearance')}</h3>
-        <div className="space-y-4">
-          <div>
-            <Label className="text-base">{t('theme')}</Label>
-            <RadioGroup 
-              value={theme} 
-              onValueChange={setTheme}
-              className="flex flex-col space-y-3 mt-2"
-            >
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <RadioGroupItem value="light" id="theme-light" />
-                <Label htmlFor="theme-light">{t('light')}</Label>
+        <h3 className="text-lg font-medium mb-4">{t('theme_appearance')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className={`cursor-pointer hover:bg-accent/50 transition-colors ${theme === 'light' ? 'border-primary' : ''}`}>
+            <CardContent className="p-4 flex flex-col items-center text-center space-y-2" onClick={() => handleThemeChange('light')}>
+              <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center">
+                <Sun className="h-8 w-8 text-amber-500" />
               </div>
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <RadioGroupItem value="dark" id="theme-dark" />
-                <Label htmlFor="theme-dark">{t('dark')}</Label>
+              <RadioGroup defaultValue={theme === 'light' ? 'light' : undefined} onValueChange={handleThemeChange}>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="light" id="light" />
+                  <Label htmlFor="light">{t('light_mode')}</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+
+          <Card className={`cursor-pointer hover:bg-accent/50 transition-colors ${theme === 'dark' ? 'border-primary' : ''}`}>
+            <CardContent className="p-4 flex flex-col items-center text-center space-y-2" onClick={() => handleThemeChange('dark')}>
+              <div className="h-20 w-20 rounded-full bg-gray-800 flex items-center justify-center">
+                <Moon className="h-8 w-8 text-blue-400" />
               </div>
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <RadioGroupItem value="system" id="theme-system" />
-                <Label htmlFor="theme-system">{t('system')}</Label>
+              <RadioGroup defaultValue={theme === 'dark' ? 'dark' : undefined} onValueChange={handleThemeChange}>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="dark" id="dark" />
+                  <Label htmlFor="dark">{t('dark_mode')}</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+
+          <Card className={`cursor-pointer hover:bg-accent/50 transition-colors ${theme === 'system' ? 'border-primary' : ''}`}>
+            <CardContent className="p-4 flex flex-col items-center text-center space-y-2" onClick={() => handleThemeChange('system')}>
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-800 flex items-center justify-center">
+                <Monitor className="h-8 w-8 text-gray-600" />
               </div>
-            </RadioGroup>
-          </div>
-          
-          <div>
-            <Label className="text-base" htmlFor="accent-color">{t('accent_color')}</Label>
-            <Select 
-              id="accent-color" 
-              value={accentColor} 
-              onValueChange={setAccentColor}
-              className="mt-2"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('select_accent_color')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="blue">{t('blue')}</SelectItem>
-                <SelectItem value="green">{t('green')}</SelectItem>
-                <SelectItem value="purple">{t('purple')}</SelectItem>
-                <SelectItem value="orange">{t('orange')}</SelectItem>
-                <SelectItem value="red">{t('red')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <RadioGroup defaultValue={theme === 'system' ? 'system' : undefined} onValueChange={handleThemeChange}>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="system" id="system" />
+                  <Label htmlFor="system">{t('system_default')}</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
         </div>
       </div>
-      
+
+      <div>
+        <h3 className="text-lg font-medium mb-4">{t('color_theme')}</h3>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="h-10 w-10 rounded-full bg-lime-500" onClick={() => document.body.classList.add('theme-lime')}>
+            {theme === 'lime' && <Check className="h-4 w-4 text-white" />}
+          </Button>
+          <Button variant="outline" className="h-10 w-10 rounded-full bg-green-500" onClick={() => document.body.classList.add('theme-green')}>
+            {theme === 'green' && <Check className="h-4 w-4 text-white" />}
+          </Button>
+          <Button variant="outline" className="h-10 w-10 rounded-full bg-blue-500" onClick={() => document.body.classList.add('theme-blue')}>
+            {theme === 'blue' && <Check className="h-4 w-4 text-white" />}
+          </Button>
+          <Button variant="outline" className="h-10 w-10 rounded-full bg-purple-500" onClick={() => document.body.classList.add('theme-purple')}>
+            {theme === 'purple' && <Check className="h-4 w-4 text-white" />}
+          </Button>
+          <Button variant="outline" className="h-10 w-10 rounded-full bg-rose-500" onClick={() => document.body.classList.add('theme-rose')}>
+            {theme === 'rose' && <Check className="h-4 w-4 text-white" />}
+          </Button>
+        </div>
+      </div>
+
       <div>
         <h3 className="text-lg font-medium mb-4">{t('language')}</h3>
-        <div>
-          <Label className="text-base" htmlFor="language">{t('select_language')}</Label>
-          <Select 
-            id="language" 
-            value={language} 
-            onValueChange={setLanguage}
-            className="mt-2"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('select_language')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ar">العربية</SelectItem>
-              <SelectItem value="en">English</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={language} onValueChange={handleLanguageChange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={t('select_language')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ar">العربية</SelectItem>
+            <SelectItem value="en">English</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      
-      <div>
-        <h3 className="text-lg font-medium mb-4">{t('accessibility')}</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="animations" className="flex-1">
-              {t('enable_animations')}
-              <p className="text-sm text-muted-foreground">{t('enable_animations_description')}</p>
-            </Label>
-            <Switch
-              id="animations"
-              checked={enableAnimations}
-              onCheckedChange={setEnableAnimations}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="high-contrast" className="flex-1">
-              {t('high_contrast_mode')}
-              <p className="text-sm text-muted-foreground">{t('high_contrast_mode_description')}</p>
-            </Label>
-            <Switch
-              id="high-contrast"
-              checked={highContrastMode}
-              onCheckedChange={setHighContrastMode}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="reduced-motion" className="flex-1">
-              {t('reduced_motion')}
-              <p className="text-sm text-muted-foreground">{t('reduced_motion_description')}</p>
-            </Label>
-            <Switch
-              id="reduced-motion"
-              checked={reducedMotion}
-              onCheckedChange={setReducedMotion}
-            />
-          </div>
-        </div>
-      </div>
-      
-      <Button onClick={handleSaveThemeSettings} disabled={isLoading} className="w-full md:w-auto">
-        <Save className="mr-2 h-4 w-4" />
-        {isLoading ? t('saving') : t('save_settings')}
-      </Button>
     </div>
   );
 }
