@@ -5,14 +5,16 @@ import { Search, Plus, Filter, Mail, Phone, Briefcase, Calendar, Clock, Timer } 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
-import { getEmployees } from '@/services/employeeService';
+import { getEmployees, getCurrentEmployeeStatusAsync } from '@/services/employeeService';
 import { Employee } from './types';
+import { EmployeeFormDialog } from './EmployeeFormDialog';
 
 export function EmployeesOverview() {
   const [searchQuery, setSearchQuery] = useState('');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,6 +45,14 @@ export function EmployeesOverview() {
     employee.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleEmployeeAdded = (newEmployee: Employee) => {
+    setEmployees(prev => [newEmployee, ...prev]);
+    toast({
+      title: "تم بنجاح",
+      description: `تمت إضافة الموظف ${newEmployee.name} بنجاح`,
+    });
+  };
+
   // Calculate department statistics
   const totalEmployees = employees.length;
   const activeEmployees = employees.filter(emp => emp.status === 'Active').length;
@@ -72,7 +82,7 @@ export function EmployeesOverview() {
             <span>تصفية</span>
           </button>
           
-          <Button>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus size={16} className="mr-1" />
             <span>إضافة موظف</span>
           </Button>
@@ -195,6 +205,12 @@ export function EmployeesOverview() {
           لا يوجد موظفين مطابقين لمعايير البحث
         </div>
       )}
+      
+      <EmployeeFormDialog 
+        open={isFormOpen} 
+        onOpenChange={setIsFormOpen} 
+        onEmployeeAdded={handleEmployeeAdded}
+      />
     </div>
   );
 }
