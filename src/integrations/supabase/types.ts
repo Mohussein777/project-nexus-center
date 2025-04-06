@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      account_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           contact: string
@@ -163,6 +181,65 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_transactions: {
+        Row: {
+          account_type: string
+          client: string | null
+          created_at: string
+          credit: number | null
+          date: string
+          debit: number | null
+          description: string | null
+          id: string
+          operation_type: string
+          project_id: number | null
+          project_name: string | null
+          project_number: string | null
+          recipient: string | null
+          safe: string | null
+        }
+        Insert: {
+          account_type: string
+          client?: string | null
+          created_at?: string
+          credit?: number | null
+          date: string
+          debit?: number | null
+          description?: string | null
+          id?: string
+          operation_type: string
+          project_id?: number | null
+          project_name?: string | null
+          project_number?: string | null
+          recipient?: string | null
+          safe?: string | null
+        }
+        Update: {
+          account_type?: string
+          client?: string | null
+          created_at?: string
+          credit?: number | null
+          date?: string
+          debit?: number | null
+          description?: string | null
+          id?: string
+          operation_type?: string
+          project_id?: number | null
+          project_name?: string | null
+          project_number?: string | null
+          recipient?: string | null
+          safe?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interactions: {
         Row: {
           client_id: number
@@ -290,6 +367,53 @@ export type Database = {
           },
         ]
       }
+      project_financials: {
+        Row: {
+          balance_client: number | null
+          created_at: string
+          deserved_amount: number | null
+          id: string
+          notes: string | null
+          project_id: number | null
+          project_progress: number | null
+          total_deal: number | null
+          total_payment: number | null
+          updated_at: string
+        }
+        Insert: {
+          balance_client?: number | null
+          created_at?: string
+          deserved_amount?: number | null
+          id?: string
+          notes?: string | null
+          project_id?: number | null
+          project_progress?: number | null
+          total_deal?: number | null
+          total_payment?: number | null
+          updated_at?: string
+        }
+        Update: {
+          balance_client?: number | null
+          created_at?: string
+          deserved_amount?: number | null
+          id?: string
+          notes?: string | null
+          project_id?: number | null
+          project_progress?: number | null
+          total_deal?: number | null
+          total_payment?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_financials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           client_id: number
@@ -342,6 +466,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      safes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       satisfaction_metrics: {
         Row: {

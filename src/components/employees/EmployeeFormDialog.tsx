@@ -58,8 +58,17 @@ export function EmployeeFormDialog({ open, onOpenChange, onEmployeeAdded }: Empl
     try {
       setIsSubmitting(true);
       
+      // Fix the type issue by ensuring all required fields are present
       const newEmployee = await createEmployee({
-        ...values,
+        name: values.name,
+        position: values.position,
+        email: values.email,
+        phone: values.phone || '',
+        department: values.department,
+        join_date: values.joinDate,
+        status: values.status,
+        employee_id: values.employeeId || '',
+        manager: values.manager || '',
         skills: values.skills || [],
       });
       
