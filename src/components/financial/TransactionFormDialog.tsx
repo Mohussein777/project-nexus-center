@@ -278,7 +278,7 @@ export function TransactionFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">عام - بدون مشروع</SelectItem>
+                        <SelectItem value="none">عام - بدون مشروع</SelectItem>
                         {projects.map(project => (
                           <SelectItem key={project.id} value={project.id.toString()}>
                             {project.name}
@@ -304,7 +304,7 @@ export function TransactionFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">لا يوجد</SelectItem>
+                        <SelectItem value="none">لا يوجد</SelectItem>
                         {safes.map(safe => (
                           <SelectItem key={safe.id} value={safe.name}>
                             {safe.name}
