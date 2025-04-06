@@ -77,7 +77,11 @@ export const getFinancialTransactions = async (filters?: {
     throw error;
   }
 
-  return data || [];
+  // Ensure correct typing by mapping the data
+  return (data || []).map(transaction => ({
+    ...transaction,
+    operation_type: transaction.operation_type as 'PAYMENT' | 'DEPOSIT'
+  }));
 };
 
 export const addFinancialTransaction = async (transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> => {
@@ -92,7 +96,10 @@ export const addFinancialTransaction = async (transaction: Omit<FinancialTransac
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    operation_type: data.operation_type as 'PAYMENT' | 'DEPOSIT'
+  };
 };
 
 export const updateFinancialTransaction = async (id: string, transaction: Partial<FinancialTransaction>): Promise<FinancialTransaction> => {
@@ -108,7 +115,10 @@ export const updateFinancialTransaction = async (id: string, transaction: Partia
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    operation_type: data.operation_type as 'PAYMENT' | 'DEPOSIT'
+  };
 };
 
 export const deleteFinancialTransaction = async (id: string): Promise<void> => {
@@ -227,8 +237,8 @@ export const getFinancialsSummary = async (): Promise<{
   }
 
   // Calculate totals
-  const totalRevenue = revenueData.reduce((sum, item) => sum + (item.credit || 0), 0);
-  const totalExpenses = expensesData.reduce((sum, item) => sum + (item.debit || 0), 0);
+  const totalRevenue = revenueData.reduce((sum, item) => sum + (parseFloat(item.credit) || 0), 0);
+  const totalExpenses = expensesData.reduce((sum, item) => sum + (parseFloat(item.debit) || 0), 0);
   const netProfit = totalRevenue - totalExpenses;
 
   // Get pending invoices from project_financials
@@ -241,7 +251,7 @@ export const getFinancialsSummary = async (): Promise<{
     throw projectFinancialsError;
   }
 
-  const pendingInvoices = projectFinancials.reduce((sum, item) => sum + (item.balance_client || 0), 0);
+  const pendingInvoices = projectFinancials.reduce((sum, item) => sum + (parseFloat(item.balance_client) || 0), 0);
 
   return {
     totalRevenue,
