@@ -32,7 +32,7 @@ export function FinancialOverview() {
       ]);
       
       setSummary(summaryData);
-      setTransactions(transactionsData);
+      setTransactions(transactionsData.data);
     } catch (error) {
       console.error('Error fetching financial data:', error);
       toast({
@@ -115,7 +115,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">إجمالي الإيرادات</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.totalRevenue.toString())}</p>
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
                 <TrendingUp size={14} className="ml-1" />
                 +12.5% مقارنة بالشهر الماضي
@@ -131,7 +131,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">إجمالي المصروفات</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.totalExpenses)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.totalExpenses.toString())}</p>
               <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
                 <TrendingUp size={14} className="ml-1" />
                 +8.3% مقارنة بالشهر الماضي
@@ -147,7 +147,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">صافي الربح</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.netProfit)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.netProfit.toString())}</p>
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
                 <TrendingUp size={14} className="ml-1" />
                 +15.2% مقارنة بالشهر الماضي
@@ -163,7 +163,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">الفواتير المعلقة</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.pendingInvoices)}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.pendingInvoices.toString())}</p>
               <p className="text-xs text-orange-600 dark:text-orange-400">8 فواتير معلقة</p>
             </div>
             <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">

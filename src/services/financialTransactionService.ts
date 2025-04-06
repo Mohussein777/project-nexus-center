@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 
@@ -11,6 +12,7 @@ export interface FinancialTransaction {
   credit?: number;
   debit?: number;
   project_name?: string;
+  project_id?: number;
   safe?: string;
   client?: string;
 }
@@ -28,6 +30,17 @@ export interface MonthlyFinancialData {
   totalExpenses: string;
   incomeChange: number;
   expenseChange: number;
+}
+
+export interface ProjectFinancialSummary {
+  id: string;
+  project_id: number;
+  project_name: string;
+  total_deal: number;
+  total_payment: number;
+  deserved_amount: number;
+  balance_client: number;
+  project_progress: number;
 }
 
 export const getFinancialTransactionStats = async () => {
@@ -87,7 +100,7 @@ export const getFinancialTransactionStats = async () => {
     }));
 
     return {
-      totalTransactions: transactionsCount.count || 0,
+      totalTransactions: transactionsCount?.length || 0,
       totalIncome: formatCurrency((totalIncome || 0).toString()),
       totalExpenses: formatCurrency((totalExpenses || 0).toString()),
       accountBalances: accountBalancesArray.map(account => ({
@@ -134,7 +147,8 @@ export const getFinancialTransactions = async (page: number = 1, pageSize: numbe
   }
 };
 
-export const createFinancialTransaction = async (transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> => {
+// Adding the missing function that's being imported in TransactionFormDialog.tsx
+export const addFinancialTransaction = async (transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> => {
   try {
     const { data, error } = await supabase
       .from('financial_transactions')
@@ -256,5 +270,135 @@ export const getMonthlyFinancialData = async () => {
   } catch (error) {
     console.error("Error fetching monthly financial data:", error);
     throw error;
+  }
+};
+
+// Adding additional missing functions
+export const getFinancialsSummary = async () => {
+  try {
+    const { data: incomeData, error: incomeError } = await supabase
+      .from('financial_transactions')
+      .select('credit')
+      .not('credit', 'is', null);
+
+    if (incomeError) throw incomeError;
+
+    const { data: expensesData, error: expensesError } = await supabase
+      .from('financial_transactions')
+      .select('debit')
+      .not('debit', 'is', null);
+
+    if (expensesError) throw expensesError;
+
+    const totalRevenue = incomeData.reduce((sum, item) => sum + (item.credit || 0), 0);
+    const totalExpenses = expensesData.reduce((sum, item) => sum + (item.debit || 0), 0);
+    const netProfit = totalRevenue - totalExpenses;
+
+    // Mock data for pending invoices until we have a proper invoices table
+    const pendingInvoices = 25000;
+
+    return {
+      totalRevenue,
+      totalExpenses,
+      netProfit,
+      pendingInvoices
+    };
+  } catch (error) {
+    console.error("Error fetching financials summary:", error);
+    throw error;
+  }
+};
+
+export const getProjectFinancialSummaries = async (): Promise<ProjectFinancialSummary[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('project_financials')
+      .select(`
+        id,
+        project_id,
+        total_deal,
+        total_payment,
+        deserved_amount,
+        balance_client,
+        project_progress,
+        projects(name)
+      `);
+
+    if (error) throw error;
+
+    // Format the data to include project_name
+    return (data || []).map(item => ({
+      id: item.id,
+      project_id: item.project_id,
+      project_name: item.projects?.name || 'Unknown Project',
+      total_deal: item.total_deal || 0,
+      total_payment: item.total_payment || 0,
+      deserved_amount: item.deserved_amount || 0,
+      balance_client: item.balance_client || 0,
+      project_progress: item.project_progress || 0
+    }));
+  } catch (error) {
+    console.error("Error fetching project financial summaries:", error);
+    return [];
+  }
+};
+
+export const saveProjectFinancials = async (projectFinancials: Partial<ProjectFinancialSummary>): Promise<ProjectFinancialSummary | null> => {
+  try {
+    const { id, ...rest } = projectFinancials;
+    
+    if (id) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('project_financials')
+        .update(rest)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as ProjectFinancialSummary;
+    } else {
+      // Insert new record
+      const { data, error } = await supabase
+        .from('project_financials')
+        .insert([rest])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as ProjectFinancialSummary;
+    }
+  } catch (error) {
+    console.error("Error saving project financials:", error);
+    return null;
+  }
+};
+
+export const getAccountTypes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('account_types')
+      .select('id, name');
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching account types:", error);
+    return [];
+  }
+};
+
+export const getSafes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('safes')
+      .select('id, name');
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching safes:", error);
+    return [];
   }
 };

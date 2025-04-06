@@ -66,11 +66,11 @@ export function TransactionFormDialog({
 
   const defaultValues: TransactionFormValues = {
     date: transaction?.date || new Date().toISOString().split('T')[0],
-    project_id: transaction?.project_id?.toString() || '',
+    project_id: transaction?.project_id ? transaction.project_id.toString() : '',
     account_type: transaction?.account_type || '',
     safe: transaction?.safe || '',
     recipient: transaction?.recipient || '',
-    operation_type: transaction?.operation_type || 'PAYMENT',
+    operation_type: transaction?.operation_type as 'PAYMENT' | 'DEPOSIT' || 'PAYMENT',
     amount: transaction 
       ? ((transaction.debit || transaction.credit || 0)).toString() 
       : '',
@@ -122,7 +122,7 @@ export function TransactionFormDialog({
       let projectNumber = undefined;
       let client = undefined;
       
-      if (values.project_id) {
+      if (values.project_id && values.project_id !== "none") {
         const projectObj = projects.find(p => p.id.toString() === values.project_id);
         if (projectObj) {
           projectName = projectObj.name;
@@ -132,12 +132,12 @@ export function TransactionFormDialog({
       
       const transactionData = {
         date: values.date,
-        project_id: values.project_id ? parseInt(values.project_id) : undefined,
+        project_id: values.project_id && values.project_id !== "none" ? parseInt(values.project_id) : undefined,
         project_name: projectName,
         project_number: projectNumber,
         client: client,
         account_type: values.account_type,
-        safe: values.safe || undefined,
+        safe: values.safe && values.safe !== "none" ? values.safe : undefined,
         recipient: values.recipient || undefined,
         operation_type: values.operation_type,
         debit: isDebit ? amount : undefined,
