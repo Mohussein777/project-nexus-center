@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -43,7 +44,7 @@ const Notifications = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setNotifications(data as Notification[] || []);
+      setNotifications((data || []) as Notification[]);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast({

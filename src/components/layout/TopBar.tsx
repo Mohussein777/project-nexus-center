@@ -48,7 +48,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
             .order('created_at', { ascending: false });
           
           if (error) throw error;
-          setUnreadNotifications(data || []);
+          setUnreadNotifications((data || []) as Notification[]);
         } catch (error) {
           console.error('Error fetching notifications:', error);
         }
