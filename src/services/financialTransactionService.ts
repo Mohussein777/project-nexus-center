@@ -12,7 +12,7 @@ export interface FinancialTransaction {
   account_type: string;
   safe?: string;
   recipient?: string;
-  operation_type: 'PAYMENT' | 'DEPOSIT';
+  operation_type: string; // Changed from "PAYMENT" | "DEPOSIT" to string to match actual data
   debit?: number;
   credit?: number;
   description?: string;
