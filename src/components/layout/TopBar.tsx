@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Menu, Bell, User, Search, ChevronRight, ChevronLeft, Languages, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,7 +25,7 @@ interface TopBarProps {
   isRtl: boolean;
 }
 
-export const TopBar = () => {
+export const TopBar = ({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { user, profile, signOut } = useAuth();
