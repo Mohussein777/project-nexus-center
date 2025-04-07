@@ -1,3 +1,4 @@
+
 export interface Profile {
   id: string;
   first_name: string | null;
@@ -18,23 +19,5 @@ export interface Notification {
   created_at: string;
 }
 
-// Add custom Database type to extend Supabase's Database type
-declare module '@supabase/supabase-js' {
-  interface Database {
-    public: {
-      Tables: {
-        profiles: {
-          Row: Profile;
-          Insert: Omit<Profile, 'updated_at'> & { updated_at?: string };
-          Update: Partial<Profile>;
-        };
-        notifications: {
-          Row: Notification;
-          Insert: Omit<Notification, 'created_at'> & { created_at?: string };
-          Update: Partial<Notification>;
-        };
-        // Keep other tables as defined in the original Database type
-      }
-    }
-  }
-}
+// Re-export the types from our Database definition to avoid circular imports
+export type { Database } from '@/integrations/supabase/supabase-types';
