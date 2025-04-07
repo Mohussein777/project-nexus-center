@@ -47,6 +47,7 @@ export function ProjectsOverview() {
   const filteredProjects = projects.filter(project => 
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     project.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (project.project_number && project.project_number.includes(searchQuery)) ||
     (project.tag && project.tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 

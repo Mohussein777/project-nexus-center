@@ -65,9 +65,29 @@ export const getProjectById = async (id: number): Promise<Project | null> => {
   };
 };
 
+export const checkProjectNumberExists = async (projectNumber: string, excludeId?: number): Promise<boolean> => {
+  let query = supabase
+    .from('projects')
+    .select('id')
+    .eq('project_number', projectNumber);
+    
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error('Error checking project number existence:', error);
+    return false;
+  }
+  
+  return data && data.length > 0;
+};
+
 export const createProject = async (project: {
   name: string;
-  project_number?: string;
+  project_number: string;
   description?: string;
   client_id: number;
   status: string;
@@ -77,6 +97,12 @@ export const createProject = async (project: {
   priority?: string;
   tag?: string;
 }): Promise<Project | null> => {
+  // Check if project number already exists
+  const exists = await checkProjectNumberExists(project.project_number);
+  if (exists) {
+    throw new Error('رقم المشروع موجود بالفعل. الرجاء اختيار رقم مشروع آخر.');
+  }
+
   // Convert to lowercase with underscores for status to match database constraint
   const statusValue = project.status.toLowerCase().replace(' ', '_');
   
@@ -135,6 +161,7 @@ export const createProject = async (project: {
 
 export const updateProject = async (id: number, project: {
   name?: string;
+  project_number?: string;
   description?: string;
   client_id?: number;
   status?: string;
@@ -145,6 +172,14 @@ export const updateProject = async (id: number, project: {
   priority?: string;
   tag?: string;
 }): Promise<boolean> => {
+  // Check if project number already exists (excluding current project)
+  if (project.project_number) {
+    const exists = await checkProjectNumberExists(project.project_number, id);
+    if (exists) {
+      throw new Error('رقم المشروع موجود بالفعل. الرجاء اختيار رقم مشروع آخر.');
+    }
+  }
+  
   // Convert status if present
   const updatedProject = { ...project };
   if (project.status) {

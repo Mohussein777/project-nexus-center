@@ -41,7 +41,7 @@ interface Client {
 
 const formSchema = z.object({
   name: z.string().min(1, "اسم المشروع مطلوب"),
-  project_number: z.string().optional(),
+  project_number: z.string().min(1, "رقم المشروع مطلوب"),
   description: z.string().optional(),
   client_id: z.coerce.number().min(1, "يرجى اختيار عميل"),
   status: z.string().min(1, "حالة المشروع مطلوبة"),
@@ -65,6 +65,7 @@ interface ProjectFormProps {
 export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProps) {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
+  const [nextProjectNumber, setNextProjectNumber] = useState("");
   const { toast } = useToast();
   const { t, language } = useLanguage();
   
@@ -110,6 +111,49 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
     fetchClients();
   }, [toast, t]);
   
+  useEffect(() => {
+    const generateNextProjectNumber = async () => {
+      // Only generate number for new projects, not when editing
+      if (initialData?.project_number) {
+        return;
+      }
+
+      try {
+        // Fetch the latest project number from the database
+        const { data, error } = await supabase
+          .from('projects')
+          .select('project_number')
+          .not('project_number', 'is', null)
+          .order('project_number', { ascending: false })
+          .limit(1);
+        
+        if (error) {
+          throw error;
+        }
+        
+        let nextNumber = 1000; // Start with 1000 if no projects exist
+        
+        if (data && data.length > 0 && data[0].project_number) {
+          // Parse the last project number and increment by 1
+          const lastNumber = parseInt(data[0].project_number);
+          nextNumber = isNaN(lastNumber) ? 1000 : lastNumber + 1;
+        }
+        
+        setNextProjectNumber(nextNumber.toString());
+        form.setValue('project_number', nextNumber.toString());
+      } catch (error) {
+        console.error('Error generating project number:', error);
+        toast({
+          title: t('error'),
+          description: t('errorGeneratingProjectNumber'),
+          variant: "destructive",
+        });
+      }
+    };
+    
+    generateNextProjectNumber();
+  }, [form, initialData, toast, t]);
+  
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
@@ -146,7 +190,12 @@ export function ProjectForm({ onSubmit, onCancel, initialData }: ProjectFormProp
               <FormItem>
                 <FormLabel>{t('projectNumber')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={language === 'ar' ? "أدخل رقم المشروع" : "Enter project number"} {...field} />
+                  <Input 
+                    placeholder={language === 'ar' ? "أدخل رقم المشروع" : "Enter project number"} 
+                    {...field} 
+                    readOnly={!initialData?.project_number}
+                    className={!initialData?.project_number ? "bg-gray-100" : ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

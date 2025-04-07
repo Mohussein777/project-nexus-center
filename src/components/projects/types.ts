@@ -2,14 +2,14 @@
 export interface Project {
   id: number;
   name: string;
-  project_number?: string;
+  project_number: string;  // Changed from optional to required
   client: string;
   status: string;
-  progress: number;  // Currently using default value 0 since not in DB
+  progress: number;
   deadline: string;
   team: number;
-  priority: string;  // Currently using default value 'Medium' since not in DB
-  tag: string;       // Currently using substring of description since not in DB
+  priority: string;
+  tag: string;
 }
 
 export type ViewMode = 'grid' | 'list';
