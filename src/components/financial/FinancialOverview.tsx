@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, Download, Calendar, DollarSign, TrendingUp, TrendingDown, BarChart4 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +9,7 @@ import {
 import { TransactionsTable } from './TransactionsTable';
 import { ProjectFinancials } from './ProjectFinancials';
 import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export function FinancialOverview() {
   const [period, setPeriod] = useState('month');
@@ -22,6 +22,7 @@ export function FinancialOverview() {
   } | null>(null);
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const { toast } = useToast();
+  const { currency } = useCurrency();
 
   const fetchFinancialData = async () => {
     setLoading(true);
@@ -115,7 +116,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">إجمالي الإيرادات</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.totalRevenue.toString())}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.totalRevenue.toString(), currency)}</p>
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
                 <TrendingUp size={14} className="ml-1" />
                 +12.5% مقارنة بالشهر الماضي
@@ -131,7 +132,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">إجمالي المصروفات</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.totalExpenses.toString())}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.totalExpenses.toString(), currency)}</p>
               <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
                 <TrendingUp size={14} className="ml-1" />
                 +8.3% مقارنة بالشهر الماضي
@@ -147,7 +148,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">صافي الربح</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.netProfit.toString())}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.netProfit.toString(), currency)}</p>
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
                 <TrendingUp size={14} className="ml-1" />
                 +15.2% مقارنة بالشهر الماضي
@@ -163,7 +164,7 @@ export function FinancialOverview() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-muted-foreground">الفواتير المعلقة</p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.pendingInvoices.toString())}</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.pendingInvoices.toString(), currency)}</p>
               <p className="text-xs text-orange-600 dark:text-orange-400">8 فواتير معلقة</p>
             </div>
             <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -24,6 +23,7 @@ import {
   getProjectFinancialSummaries,
   saveProjectFinancials
 } from '@/services/financialTransactionService';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export function ProjectFinancials() {
   const [summaries, setSummaries] = useState<ProjectFinancialSummary[]>([]);
@@ -32,6 +32,7 @@ export function ProjectFinancials() {
   const [sortField, setSortField] = useState<string>('project_name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
+  const { currency } = useCurrency();
 
   const fetchProjectFinancials = async () => {
     try {
@@ -64,7 +65,6 @@ export function ProjectFinancials() {
   };
 
   const sortedSummaries = [...summaries].sort((a, b) => {
-    // Convert to lowercase strings for string fields to ensure case-insensitive sorting
     const fieldA = typeof a[sortField as keyof ProjectFinancialSummary] === 'string' ? 
       (a[sortField as keyof ProjectFinancialSummary] as string).toLowerCase() : 
       a[sortField as keyof ProjectFinancialSummary];
@@ -194,10 +194,10 @@ export function ProjectFinancials() {
                 filteredSummaries.map((summary) => (
                   <TableRow key={summary.id}>
                     <TableCell className="font-medium">{summary.project_name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(summary.total_deal.toString())}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(summary.total_payment.toString())}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(summary.deserved_amount.toString())}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(summary.balance_client.toString())}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(summary.total_deal.toString(), currency)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(summary.total_payment.toString(), currency)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(summary.deserved_amount.toString(), currency)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(summary.balance_client.toString(), currency)}</TableCell>
                     <TableCell className="text-right">{summary.project_progress}%</TableCell>
                   </TableRow>
                 ))

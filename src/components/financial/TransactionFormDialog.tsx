@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -24,6 +23,7 @@ import {
   getSafes
 } from '@/services/financialTransactionService';
 import { getProjects } from '@/services/projectService';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const transactionFormSchema = z.object({
   date: z.string().min(1, { message: 'التاريخ مطلوب' }),
@@ -61,6 +61,7 @@ export function TransactionFormDialog({
   const [accountTypes, setAccountTypes] = useState<{ id: string; name: string }[]>([]);
   const [safes, setSafes] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
+  const { currency } = useCurrency();
 
   const isEditMode = !!transaction;
 
@@ -82,7 +83,6 @@ export function TransactionFormDialog({
     defaultValues
   });
 
-  // Load dependencies when the dialog opens
   useEffect(() => {
     if (open) {
       const fetchData = async () => {
@@ -117,7 +117,6 @@ export function TransactionFormDialog({
       const amount = parseFloat(values.amount);
       const isDebit = values.operation_type === 'PAYMENT';
       
-      // Find project details if a project was selected
       let projectName = undefined;
       let projectNumber = undefined;
       let client = undefined;
@@ -126,7 +125,6 @@ export function TransactionFormDialog({
         const projectObj = projects.find(p => p.id.toString() === values.project_id);
         if (projectObj) {
           projectName = projectObj.name;
-          // We would need to fetch more project details here ideally
         }
       }
       
@@ -143,6 +141,7 @@ export function TransactionFormDialog({
         debit: isDebit ? amount : undefined,
         credit: !isDebit ? amount : undefined,
         description: values.description || undefined,
+        currency: currency,
       };
       
       if (isEditMode && transaction) {

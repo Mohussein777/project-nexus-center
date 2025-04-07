@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Menu, Bell, User, Search, ChevronRight, ChevronLeft, Languages, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { Notification } from '@/types/supabase';
+import { CurrencySelector } from "@/components/currency/CurrencySelector";
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -24,7 +24,7 @@ interface TopBarProps {
   isRtl: boolean;
 }
 
-export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps) {
+export const TopBar = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { user, profile, signOut } = useAuth();
@@ -133,7 +133,6 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
     }
   };
 
-  // Get initials from user profile or email
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
       return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
@@ -174,6 +173,8 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
           </div>
         </div>
 
+        <CurrencySelector />
+
         <div className="flex items-center space-x-3">
           <button 
             onClick={toggleLanguage} 
@@ -183,7 +184,6 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
             {language === 'ar' ? "EN" : "عربي"}
           </button>
           
-          {/* Notifications dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors relative">
@@ -253,7 +253,6 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
             </DropdownMenuContent>
           </DropdownMenu>
           
-          {/* User profile dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center p-1 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
@@ -309,4 +308,4 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
       </div>
     </header>
   );
-}
+};

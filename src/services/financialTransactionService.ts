@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Define types
@@ -17,6 +16,7 @@ export interface FinancialTransaction {
   credit?: number;
   description?: string;
   created_at: string;
+  currency?: string; // Add currency field
 }
 
 export interface ProjectFinancialSummary {
