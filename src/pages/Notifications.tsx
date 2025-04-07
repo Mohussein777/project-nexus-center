@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -11,15 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-  user_id: string;
-}
+import { Notification } from '@/types/supabase';
 
 const Notifications = () => {
   const { t } = useLanguage();
@@ -52,7 +43,7 @@ const Notifications = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setNotifications(data || []);
+      setNotifications(data as Notification[] || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast({

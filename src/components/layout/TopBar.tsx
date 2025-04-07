@@ -16,6 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { Notification } from '@/types/supabase';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -27,7 +28,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
   const [searchFocused, setSearchFocused] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { user, profile, signOut } = useAuth();
-  const [unreadNotifications, setUnreadNotifications] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const navigate = useNavigate();
 
@@ -66,7 +67,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         }, (payload) => {
-          setUnreadNotifications(prev => [payload.new, ...prev]);
+          setUnreadNotifications(prev => [payload.new as Notification, ...prev]);
           toast({
             title: t('newNotification'),
             description: payload.new.message,
