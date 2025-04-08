@@ -34,8 +34,8 @@ import { useToast } from '@/hooks/use-toast';
 
 interface TaskListProps {
   tasks: any[];
-  onUpdateTask: (task: any) => void;
-  onDeleteTask: (taskId: number) => void;
+  onUpdateTask: (task: any) => Promise<boolean>;
+  onDeleteTask: (taskId: string) => Promise<boolean>;
 }
 
 export function TaskList({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) {
@@ -90,13 +90,15 @@ export function TaskList({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) {
     setIsEditDialogOpen(true);
   };
   
-  const handleUpdateTask = (updatedTask: any) => {
-    onUpdateTask(updatedTask);
-    setIsEditDialogOpen(false);
-    setSelectedTask(null);
+  const handleUpdateTask = async (updatedTask: any) => {
+    const success = await onUpdateTask(updatedTask);
+    if (success) {
+      setIsEditDialogOpen(false);
+      setSelectedTask(null);
+    }
   };
   
-  const handleDeleteTask = (taskId: number) => {
+  const handleDeleteTask = (taskId: string) => {
     // In a real app, you might want to show a confirmation dialog
     onDeleteTask(taskId);
   };
