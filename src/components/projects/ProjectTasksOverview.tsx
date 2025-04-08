@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, ArrowLeft, CheckSquare, AlignCenter, Clock } from 'lucide-react';
+import { Plus, ArrowLeft, CheckSquare, AlignCenter, Clock, BarChart } from 'lucide-react';
 import { TaskForm } from './TaskForm';
 import { TaskList } from './TaskList';
 import { KanbanBoard } from './KanbanBoard';
@@ -31,7 +30,6 @@ export function ProjectTasksOverview() {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   
-  // Extract project ID from URL path
   const projectId = parseInt(location.pathname.split('/projects/')[1]?.split('/')[0]);
   
   useEffect(() => {
@@ -184,10 +182,21 @@ export function ProjectTasksOverview() {
             </TabsTrigger>
           </TabsList>
           
-          <Button onClick={() => setIsDialogOpen(true)} className="ml-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            {t('addTask')}
-          </Button>
+          <div className="flex gap-2 ml-auto">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/workload')}
+            >
+              <BarChart className="h-4 w-4 mr-2" />
+              {t('workloadPreview')}
+            </Button>
+            
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {t('addTask')}
+            </Button>
+          </div>
         </Tabs>
       </div>
       
