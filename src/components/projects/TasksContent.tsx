@@ -23,6 +23,11 @@ export function TasksContent({
 }: TasksContentProps) {
   const { t } = useLanguage();
   
+  // Create a wrapper function to handle the different return types
+  const handleUpdateTask = async (task: any) => {
+    await onUpdateTask(task);
+  };
+  
   return (
     <div className="glass-card dark:glass-card-dark rounded-xl overflow-hidden">
       <Tabs value={activeTab} className="w-full">
@@ -50,14 +55,14 @@ export function TasksContent({
         <TabsContent value="kanban" className="p-0 m-0">
           <KanbanBoard 
             tasks={tasks}
-            onUpdateTask={onUpdateTask}
+            onUpdateTask={handleUpdateTask}
           />
         </TabsContent>
         
         <TabsContent value="gantt" className="p-0 m-0">
           <GanttChart 
             tasks={tasks}
-            onUpdateTask={onUpdateTask}
+            onUpdateTask={handleUpdateTask}
           />
         </TabsContent>
       </Tabs>
