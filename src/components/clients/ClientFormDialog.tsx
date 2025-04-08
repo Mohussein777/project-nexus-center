@@ -87,7 +87,7 @@ export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFo
       if (newClient) {
         toast({
           title: t('clientAddedSuccess'),
-          description: t('clientAddedSuccessDesc').replace('{name}', newClient.name),
+          description: t('clientAddedSuccessDesc').replace('{name}', newClient.name) + ` (${newClient.code})`,
         });
         
         form.reset();

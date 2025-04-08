@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Client, Interaction, Contract, SatisfactionMetric } from "@/components/clients/types";
 import { Database } from "@/integrations/supabase/types";
@@ -19,6 +18,7 @@ export const mapDbClientToClient = (dbClient: DbClient): Client => ({
   projects: 0, // This will be calculated separately
   status: dbClient.status as 'Active' | 'Inactive',
   type: dbClient.type as 'Corporate' | 'Government' | 'Individual',
+  code: dbClient.code
 });
 
 export const mapDbInteractionToInteraction = (dbInteraction: DbInteraction): Interaction => ({
@@ -228,7 +228,9 @@ export const getClientSatisfactionMetrics = async (clientId: number): Promise<Sa
 };
 
 // Create a new client
-export const createClient = async (client: Omit<Client, 'id' | 'projects'>): Promise<Client | null> => {
+export const createClient = async (client: Omit<Client, 'id' | 'projects' | 'code'>): Promise<Client | null> => {
+  const clientCode = await generateClientCode();
+  
   const { data: dbClient, error } = await supabase
     .from('clients')
     .insert({
@@ -239,6 +241,7 @@ export const createClient = async (client: Omit<Client, 'id' | 'projects'>): Pro
       location: client.location,
       type: client.type,
       status: client.status,
+      code: clientCode
     })
     .select()
     .single();
@@ -266,6 +269,7 @@ export const updateClient = async (id: number, client: Partial<Omit<Client, 'id'
       location: client.location,
       type: client.type,
       status: client.status,
+      code: client.code
     })
     .eq('id', id);
 
@@ -299,4 +303,28 @@ export const createContract = async (contract: Omit<Contract, 'id'>): Promise<Co
   }
 
   return mapDbContractToContract(dbContract);
+};
+
+// Generate a new client code
+const generateClientCode = async (): Promise<string> => {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('code')
+    .order('code', { ascending: false })
+    .limit(1);
+  
+  if (error) {
+    console.error('Error fetching latest client code:', error);
+    return 'C-001'; // Default code if fetching fails
+  }
+  
+  if (!data || data.length === 0) {
+    return 'C-001'; // Default code if no clients exist
+  }
+  
+  const lastCode = data[0].code;
+  const codeNumber = parseInt(lastCode.split('-')[1], 10);
+  const newNumber = codeNumber + 1;
+  
+  return `C-${newNumber.toString().padStart(3, '0')}`;
 };

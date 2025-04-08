@@ -9,6 +9,7 @@ export interface Client {
   projects: number;
   status: 'Active' | 'Inactive';
   type: 'Corporate' | 'Government' | 'Individual';
+  code: string;
 }
 
 export interface Interaction {
