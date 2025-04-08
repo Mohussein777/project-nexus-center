@@ -4,4 +4,9 @@ export * from './clientsBaseService';
 export * from './interactionsService';
 export * from './contractsService';
 export * from './satisfactionService';
-export * from './clientsMappers';
+// Export only the mapper functions, not the types from mappers to avoid conflicts
+export { 
+  mapDbClientToClient, 
+  mapDbInteractionToInteraction, 
+  mapDbContractToContract 
+} from './clientsMappers';

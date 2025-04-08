@@ -1,8 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/components/clients/types";
-import { Database } from "@/integrations/supabase/types";
 import { mapDbClientToClient } from "./clientsMappers";
+import { Database } from "@/integrations/supabase/types";
 
 export type DbClient = Database['public']['Tables']['clients']['Row'];
 
@@ -138,7 +138,8 @@ export const generateClientCode = async (): Promise<string> => {
     return 'C-001'; // Default code if no clients exist
   }
   
-  const lastCode = data[0].code;
+  // Handle case where code might be null in the database
+  const lastCode = data[0].code || 'C-000';
   const codeNumber = parseInt(lastCode.split('-')[1], 10);
   const newNumber = codeNumber + 1;
   
