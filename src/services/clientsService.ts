@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Client, Interaction, Contract, SatisfactionMetric } from "@/components/clients/types";
 import { Database } from "@/integrations/supabase/types";
