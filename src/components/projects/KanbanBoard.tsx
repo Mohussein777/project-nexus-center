@@ -20,13 +20,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { TaskForm } from './TaskForm';
 import { useToast } from '@/hooks/use-toast';
 
-interface KanbanBoardProps {
+export interface KanbanBoardProps {
   tasks: any[];
-  onUpdateTaskStatus: (taskId: number, newStatus: string) => void;
-  onUpdateTask: (task: any) => void;
+  onUpdateTask: (task: any) => Promise<void>;
 }
 
-export function KanbanBoard({ tasks, onUpdateTaskStatus, onUpdateTask }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
   const { toast } = useToast();
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -58,12 +57,16 @@ export function KanbanBoard({ tasks, onUpdateTaskStatus, onUpdateTask }: KanbanB
       const newStatus = over.id.toString();
       
       if (columns.some(col => col.id === newStatus)) {
-        onUpdateTaskStatus(taskId, newStatus);
-        
-        toast({
-          title: "تم التحديث",
-          description: "تم تحديث حالة المهمة بنجاح",
-        });
+        const taskToUpdate = tasks.find(task => task.id === taskId);
+        if (taskToUpdate) {
+          const updatedTask = { ...taskToUpdate, status: newStatus };
+          onUpdateTask(updatedTask);
+          
+          toast({
+            title: "تم التحديث",
+            description: "تم تحديث حالة المهمة بنجاح",
+          });
+        }
       }
     }
   };

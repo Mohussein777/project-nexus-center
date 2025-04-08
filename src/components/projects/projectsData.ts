@@ -1,71 +1,77 @@
 
 import { Project } from './types';
 
-export const projects: Project[] = [
+export const projectsData: Project[] = [
   {
     id: 1,
-    name: 'Al Hamra Tower',
-    client: 'Al Hamra Real Estate',
-    status: 'In Progress',
+    name: "تطوير واجهة المستخدم",
+    project_number: "1000",
+    client: "شركة تقنية المعلومات",
+    status: "in_progress",
     progress: 65,
-    deadline: 'Aug 15, 2023',
-    team: 8,
-    priority: 'High',
-    tag: 'Commercial'
+    deadline: "2023-05-28",
+    team: 4,
+    priority: "High",
+    tag: "UI/UX"
   },
   {
     id: 2,
-    name: 'Marina Residence',
-    client: 'Gulf Developers',
-    status: 'At Risk',
-    progress: 45,
-    deadline: 'Jul 30, 2023',
-    team: 6,
-    priority: 'Medium',
-    tag: 'Residential'
+    name: "إعادة تصميم الموقع الإلكتروني",
+    project_number: "1001",
+    client: "مؤسسة الأبحاث العلمية",
+    status: "completed",
+    progress: 100,
+    deadline: "2023-04-15",
+    team: 3,
+    priority: "Medium",
+    tag: "Web Design"
   },
   {
     id: 3,
-    name: 'Tech Park',
-    client: 'Ministry of Technology',
-    status: 'On Track',
-    progress: 72,
-    deadline: 'Oct 10, 2023',
-    team: 12,
-    priority: 'High',
-    tag: 'Government'
+    name: "تطوير تطبيق الهاتف المحمول",
+    project_number: "1002",
+    client: "شركة الاتصالات السعودية",
+    status: "not_started",
+    progress: 0,
+    deadline: "2023-06-30",
+    team: 5,
+    priority: "Urgent",
+    tag: "Mobile App"
   },
   {
     id: 4,
-    name: 'Gulf Heights',
-    client: 'Al Madina Group',
-    status: 'Delayed',
-    progress: 35,
-    deadline: 'Jun 20, 2023',
-    team: 9,
-    priority: 'Urgent',
-    tag: 'Mixed Use'
+    name: "تحسين أداء النظام",
+    project_number: "1003",
+    client: "وزارة التعليم",
+    status: "at_risk",
+    progress: 30,
+    deadline: "2023-05-10",
+    team: 2,
+    priority: "High",
+    tag: "Performance"
   },
   {
     id: 5,
-    name: 'Central Hospital',
-    client: 'Ministry of Health',
-    status: 'On Track',
+    name: "تحليل البيانات",
+    project_number: "1004",
+    client: "شركة البيانات الضخمة",
+    status: "in_review",
     progress: 85,
-    deadline: 'Sep 5, 2023',
-    team: 15,
-    priority: 'High',
-    tag: 'Healthcare'
+    deadline: "2023-05-22",
+    team: 3,
+    priority: "Medium",
+    tag: "Analytics"
   },
   {
     id: 6,
-    name: 'Sunset Mall',
-    client: 'Retail Ventures',
-    status: 'On Hold',
-    progress: 25,
-    deadline: 'N/A',
+    name: "تطوير واجهة برمجة التطبيقات",
+    project_number: "1005",
+    client: "منصة التجارة الإلكترونية",
+    status: "in_progress",
+    progress: 45,
+    deadline: "2023-06-15",
     team: 4,
-    priority: 'Low',
-    tag: 'Retail'
+    priority: "High",
+    tag: "API"
   }
 ];

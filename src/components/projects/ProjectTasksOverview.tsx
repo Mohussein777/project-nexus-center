@@ -183,49 +183,51 @@ export function ProjectTasksOverview() {
               <span>{t('gantt')}</span>
             </TabsTrigger>
           </TabsList>
+          
+          <Button onClick={() => setIsDialogOpen(true)} className="ml-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            {t('addTask')}
+          </Button>
         </Tabs>
-        
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t('addTask')}
-        </Button>
       </div>
       
       <div className="glass-card dark:glass-card-dark rounded-xl overflow-hidden">
-        <TabsContent value="list" className="p-0 m-0">
-          {tasks.length > 0 ? (
-            <TaskList 
+        <Tabs value={activeTab} className="w-full">
+          <TabsContent value="list" className="p-0 m-0">
+            {tasks.length > 0 ? (
+              <TaskList 
+                tasks={tasks}
+                onUpdateTask={handleUpdateTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            ) : (
+              <div className="text-center p-12 text-muted-foreground">
+                {t('noTasksFound')}
+                <Button 
+                  variant="link" 
+                  onClick={() => setIsDialogOpen(true)}
+                  className="ml-2"
+                >
+                  {t('createYourFirstTask')}
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="kanban" className="p-0 m-0">
+            <KanbanBoard 
               tasks={tasks}
               onUpdateTask={handleUpdateTask}
-              onDeleteTask={handleDeleteTask}
             />
-          ) : (
-            <div className="text-center p-12 text-muted-foreground">
-              {t('noTasksFound')}
-              <Button 
-                variant="link" 
-                onClick={() => setIsDialogOpen(true)}
-                className="ml-2"
-              >
-                {t('createYourFirstTask')}
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="kanban" className="p-4 m-0">
-          <KanbanBoard 
-            tasks={tasks}
-            onTaskUpdate={handleUpdateTask}
-          />
-        </TabsContent>
-        
-        <TabsContent value="gantt" className="p-4 m-0">
-          <GanttChart 
-            tasks={tasks}
-            onTaskUpdate={handleUpdateTask}
-          />
-        </TabsContent>
+          </TabsContent>
+          
+          <TabsContent value="gantt" className="p-0 m-0">
+            <GanttChart 
+              tasks={tasks}
+              onUpdateTask={handleUpdateTask}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

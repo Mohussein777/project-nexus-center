@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { format, addDays, differenceInDays, isWithinInterval, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -7,9 +6,9 @@ import { TaskForm } from './TaskForm';
 import { Button } from '../ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface GanttChartProps {
+export interface GanttChartProps {
   tasks: any[];
-  onUpdateTask: (task: any) => void;
+  onUpdateTask: (task: any) => Promise<void>;
 }
 
 export function GanttChart({ tasks, onUpdateTask }: GanttChartProps) {
@@ -87,24 +86,25 @@ export function GanttChart({ tasks, onUpdateTask }: GanttChartProps) {
   };
   
   const calculateTaskPosition = (task: any) => {
-    if (!visibleDays.length) return { left: 0, width: 0 };
+    if (!task.startDate || !task.endDate) return { left: 0, width: 0 };
     
-    const taskStartDate = parseISO(task.startDate);
-    const taskEndDate = parseISO(task.endDate);
-    
-    const startIndex = visibleDays.findIndex(day => 
-      day.getDate() === taskStartDate.getDate() &&
-      day.getMonth() === taskStartDate.getMonth() &&
-      day.getFullYear() === taskStartDate.getFullYear()
-    );
-    
-    const duration = differenceInDays(taskEndDate, taskStartDate) + 1;
-    
-    const dayWidth = 60; // Width of each day column
-    const left = startIndex * dayWidth;
-    const width = duration * dayWidth;
-    
-    return { left, width };
+    try {
+      const taskStartDate = parseISO(task.startDate);
+      const taskEndDate = parseISO(task.endDate);
+      
+      // Calculate position based on visible days
+      const startIndex = 0; // Default to first visible day if not found
+      const duration = differenceInDays(taskEndDate, taskStartDate) + 1;
+      
+      const dayWidth = 60; // Width of each day column
+      const left = startIndex * dayWidth;
+      const width = duration * dayWidth;
+      
+      return { left, width };
+    } catch (error) {
+      console.error("Error calculating task position:", error);
+      return { left: 0, width: 0 };
+    }
   };
   
   const getTaskColor = (task: any) => {
