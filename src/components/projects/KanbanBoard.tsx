@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface KanbanBoardProps {
   tasks: any[];
-  onUpdateTask: (task: any) => Promise<void>;
+  onUpdateTask: (task: any) => Promise<boolean>;
 }
 
 export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
@@ -76,8 +76,8 @@ export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
     setIsEditDialogOpen(true);
   };
   
-  const handleUpdateTask = (updatedTask: any) => {
-    onUpdateTask(updatedTask);
+  const handleUpdateTask = async (updatedTask: any) => {
+    await onUpdateTask(updatedTask);
     setIsEditDialogOpen(false);
     setSelectedTask(null);
   };
