@@ -1,12 +1,24 @@
 
-// Re-export everything from the individual service files
-export * from './clientsBaseService';
-export * from './interactionsService';
-export * from './contractsService';
-export * from './satisfactionService';
-// Export only the mapper functions, not the types from mappers to avoid conflicts
-export { 
+import { getClientById, getClients, createClient, updateClient, deleteClient } from './clientsBaseService';
+import { getClientContracts } from './contractsService';
+import { getClientInteractions } from './interactionsService';
+import { getClientSatisfactionMetrics } from './satisfactionService';
+import { 
   mapDbClientToClient, 
-  mapDbInteractionToInteraction, 
-  mapDbContractToContract 
+  mapDbInteractionToClientInteraction,
+  mapDbContractToClientContract
 } from './clientsMappers';
+
+export {
+  getClientById,
+  getClients,
+  createClient,
+  updateClient,
+  deleteClient,
+  getClientContracts,
+  getClientInteractions,
+  getClientSatisfactionMetrics,
+  mapDbClientToClient,
+  mapDbInteractionToClientInteraction,
+  mapDbContractToClientContract
+};

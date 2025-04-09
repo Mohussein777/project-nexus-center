@@ -1,5 +1,5 @@
 
-import { Client, ClientContract, ClientInteraction } from "@/components/clients/types";
+import { Client } from "@/components/clients/types";
 import { DbClient } from "./clientsBaseService";
 
 export const mapDbClientToClient = (dbClient: DbClient): Omit<Client, 'projects'> => {
@@ -29,6 +29,16 @@ const getClientType = (type: string): 'Corporate' | 'Government' | 'Individual' 
   }
 };
 
+export interface ClientContract {
+  id: number;
+  title: string;
+  value: number;
+  status: 'Active' | 'Pending' | 'Expired';
+  startDate: string;
+  endDate: string;
+  renewalAlert: boolean;
+}
+
 export const mapDbContractToClientContract = (contract: any): ClientContract => {
   return {
     id: contract.id,
@@ -57,6 +67,16 @@ const getContractStatus = (status: string): 'Active' | 'Pending' | 'Expired' => 
       return 'Pending';
   }
 };
+
+export interface ClientInteraction {
+  id: number;
+  date: string;
+  type: string;
+  employee: string;
+  summary: string;
+  sentiment: string;
+  followupDate?: string;
+}
 
 export const mapDbInteractionToClientInteraction = (interaction: any): ClientInteraction => {
   return {

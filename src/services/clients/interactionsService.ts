@@ -1,49 +1,97 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Interaction } from "@/components/clients/types";
-import { mapDbInteractionToInteraction } from "./clientsMappers";
+import { ClientInteraction, mapDbInteractionToClientInteraction } from "./clientsMappers";
 
-export type DbInteraction = Database['public']['Tables']['interactions']['Row'];
-
-// Get client interactions
-export const getClientInteractions = async (clientId: number): Promise<Interaction[]> => {
-  const { data: dbInteractions, error } = await supabase
-    .from('interactions')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('date', { ascending: false });
-
-  if (error) {
-    console.error(`Error fetching interactions for client ${clientId}:`, error);
+export const getClientInteractions = async (clientId: number): Promise<ClientInteraction[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('interactions')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('date', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching client interactions:", error);
+      throw error;
+    }
+    
+    return data.map(interaction => mapDbInteractionToClientInteraction(interaction));
+  } catch (error) {
+    console.error("Error in getClientInteractions:", error);
     return [];
   }
-
-  return (dbInteractions || []).map(mapDbInteractionToInteraction);
 };
 
-// Create a new interaction
-export const createInteraction = async (interaction: Omit<Interaction, 'id'>): Promise<Interaction | null> => {
-  const { data: dbInteraction, error } = await supabase
-    .from('interactions')
-    .insert({
-      client_id: interaction.clientId,
-      type: interaction.type,
-      date: interaction.date,
-      summary: interaction.summary,
-      employee: interaction.employee,
-      sentiment: interaction.sentiment,
-      followup_date: interaction.followupDate,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating interaction:', error);
+export const createClientInteraction = async (clientId: number, interaction: Omit<ClientInteraction, 'id'>): Promise<ClientInteraction | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('interactions')
+      .insert({
+        client_id: clientId,
+        date: interaction.date,
+        type: interaction.type,
+        employee: interaction.employee,
+        summary: interaction.summary,
+        sentiment: interaction.sentiment,
+        followup_date: interaction.followupDate
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating client interaction:", error);
+      return null;
+    }
+    
+    return mapDbInteractionToClientInteraction(data);
+  } catch (error) {
+    console.error("Error in createClientInteraction:", error);
     return null;
   }
-
-  return mapDbInteractionToInteraction(dbInteraction);
 };
 
-// Import Database type
-import { Database } from "@/integrations/supabase/types";
+export const updateClientInteraction = async (interactionId: number, updates: Partial<Omit<ClientInteraction, 'id'>>): Promise<boolean> => {
+  try {
+    // Convert from camelCase to snake_case for DB
+    const dbUpdates: any = {};
+    if (updates.date) dbUpdates.date = updates.date;
+    if (updates.type) dbUpdates.type = updates.type;
+    if (updates.employee) dbUpdates.employee = updates.employee;
+    if (updates.summary) dbUpdates.summary = updates.summary;
+    if (updates.sentiment) dbUpdates.sentiment = updates.sentiment;
+    if ('followupDate' in updates) dbUpdates.followup_date = updates.followupDate;
+    
+    const { error } = await supabase
+      .from('interactions')
+      .update(dbUpdates)
+      .eq('id', interactionId);
+    
+    if (error) {
+      console.error("Error updating client interaction:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in updateClientInteraction:", error);
+    return false;
+  }
+};
+
+export const deleteClientInteraction = async (interactionId: number): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('interactions')
+      .delete()
+      .eq('id', interactionId);
+    
+    if (error) {
+      console.error("Error deleting client interaction:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in deleteClientInteraction:", error);
+    return false;
+  }
+};
