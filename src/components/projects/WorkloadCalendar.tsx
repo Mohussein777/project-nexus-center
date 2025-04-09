@@ -1,233 +1,173 @@
-
 import { useState, useEffect } from 'react';
-import { format, addDays, subDays, startOfWeek, isSameDay } from 'date-fns';
-import { ar } from 'date-fns/locale';
-import { Avatar } from '../ui/avatar';
-import { Button } from '../ui/button';
-import { Card } from '../ui/card';
-import { User, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getEmployees } from '@/services/employeeService';
-import { getTasks } from '@/services/taskService';
+import { useToast } from '@/hooks/use-toast';
 import { TaskAssignment } from './TaskAssignment';
 
+interface Task {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  assignee_id: string | null;
+}
+
 export function WorkloadCalendar() {
-  const [startDate, setStartDate] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
-  const [employees, setEmployees] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { t, language } = useLanguage();
-  
-  // Generate dates for the week
-  const weekDays = Array.from({ length: 7 }).map((_, index) => {
-    return addDays(startDate, index);
-  });
+  const [date, setDate] = useState<Date>(new Date());
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const { t } = useLanguage();
+  const { toast } = useToast();
   
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch employees
-        const employeesData = await getEmployees();
-        setEmployees(employeesData);
-        
-        // Fetch all tasks from all projects
-        const projectsResponse = await fetch('/api/projects');
-        const projects = await projectsResponse.json();
-        
-        let allTasks = [];
-        for (const project of projects) {
-          const tasksData = await getTasks(project.id);
-          allTasks = [...allTasks, ...tasksData];
-        }
-        
-        setTasks(allTasks);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
+    // Mock tasks for demonstration
+    const mockTasks: Task[] = [
+      {
+        id: '1',
+        name: 'Design Sprint',
+        startDate: new Date(2024, 9, 21),
+        endDate: new Date(2024, 9, 23),
+        assignee_id: 'employee1',
+      },
+      {
+        id: '2',
+        name: 'Code Review',
+        startDate: new Date(2024, 9, 22),
+        endDate: new Date(2024, 9, 24),
+        assignee_id: 'employee2',
+      },
+      {
+        id: '3',
+        name: 'Frontend Implementation',
+        startDate: new Date(2024, 9, 25),
+        endDate: new Date(2024, 9, 27),
+        assignee_id: 'employee1',
+      },
+      {
+        id: '4',
+        name: 'Backend Implementation',
+        startDate: new Date(2024, 9, 25),
+        endDate: new Date(2024, 9, 27),
+        assignee_id: 'employee3',
+      },
+      {
+        id: '5',
+        name: 'Testing and QA',
+        startDate: new Date(2024, 9, 28),
+        endDate: new Date(2024, 9, 29),
+        assignee_id: null,
+      },
+    ];
+    setTasks(mockTasks);
   }, []);
   
-  const previousWeek = () => {
-    setStartDate(prevDate => subDays(prevDate, 7));
+  const getTasksForDate = (date: Date): Task[] => {
+    return tasks.filter(task => {
+      const taskStartDate = new Date(task.startDate);
+      const taskEndDate = new Date(task.endDate);
+      return date >= taskStartDate && date <= taskEndDate;
+    });
   };
   
-  const nextWeek = () => {
-    setStartDate(prevDate => addDays(prevDate, 7));
-  };
-  
-  const goToCurrentWeek = () => {
-    setStartDate(startOfWeek(new Date(), { weekStartsOn: 0 }));
-  };
-  
-  const getTasksForEmployeeAndDay = (employeeId, date) => {
-    return tasks.filter(task => 
-      task.assigneeId === employeeId && 
-      task.startDate && 
-      task.endDate && 
-      new Date(task.startDate) <= date && 
-      new Date(task.endDate) >= date
-    );
-  };
-  
-  // Calculate task hours for an employee (for display next to name)
-  const getEmployeeWorkHours = (employeeId) => {
-    const employeeTasks = tasks.filter(task => task.assigneeId === employeeId);
-    const totalHours = employeeTasks.reduce((total, task) => {
-      // Simplified calculation - in a real app you'd calculate actual work hours
-      return total + 8; // Assuming 8 hours per task
-    }, 0);
+  const getOverCapacityTasks = (date: Date): Task[] => {
+    const tasksOnDate = getTasksForDate(date);
+    const employeeTaskCounts: { [employeeId: string]: number } = {};
     
-    // Calculate capacity (40 hours per week is standard)
-    const capacity = 40;
+    tasksOnDate.forEach(task => {
+      if (task.assignee_id) {
+        employeeTaskCounts[task.assignee_id] = (employeeTaskCounts[task.assignee_id] || 0) + 1;
+      }
+    });
     
-    return { used: totalHours, capacity };
+    return tasksOnDate.filter(task => task.assignee_id && employeeTaskCounts[task.assignee_id] > 1);
   };
   
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center p-12">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  const getUnassignedTasks = (date: Date): Task[] => {
+    const tasksOnDate = getTasksForDate(date);
+    return tasksOnDate.filter(task => !task.assignee_id);
+  };
+  
+  const overCapacityTasks = getOverCapacityTasks(date);
+  const unassignedTasks = getUnassignedTasks(date);
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">{t('workloadPreview')}</h1>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={previousWeek}>
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            {t('previous')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={goToCurrentWeek}>
-            <CalendarDays className="h-4 w-4 mr-1" />
-            {t('today')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={nextWeek}>
-            {t('next')}
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">{t('workloadCalendar')}</h1>
+      
+      <div className="flex items-center justify-between mb-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={format(date, "MMMM yyyy")}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              <span>{format(date, "MMMM yyyy")}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="month"
+              defaultMonth={date}
+              selected={date}
+              onSelect={setDate}
+              numberOfMonths={1}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       
-      <Card>
-        <div className="grid grid-cols-[250px_repeat(7,1fr)]">
-          {/* Header */}
-          <div className="p-3 font-medium border-b border-r bg-muted/40">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span>{t('assignees')} ({employees.length})</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">{t('overCapacity')}</h2>
+          {overCapacityTasks.map((task) => (
+            <div key={task.id} className="mb-2">
+              <TaskAssignment 
+                value={task.assignee_id || null}
+                onChange={() => {}}
+              />
+              <p>
+                {task.name} ({format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')})
+              </p>
             </div>
-          </div>
-          
-          {/* Days of the week */}
-          {weekDays.map((day, index) => {
-            const isToday = isSameDay(day, new Date());
-            
-            return (
-              <div 
-                key={index} 
-                className={`p-3 text-center font-medium border-b ${isToday ? 'bg-primary/10' : 'bg-muted/40'}`}
-              >
-                <div className="text-sm">{format(day, 'EEE', { locale: language === 'ar' ? ar : undefined })}</div>
-                <div className="text-xl">{format(day, 'd', { locale: language === 'ar' ? ar : undefined })}</div>
-              </div>
-            );
-          })}
-          
-          {/* Employee rows */}
-          {employees.map((employee, employeeIndex) => {
-            const { used, capacity } = getEmployeeWorkHours(employee.id);
-            const capacityPercentage = Math.min((used / capacity) * 100, 100);
-            
-            return (
-              <div key={employee.id} className="contents">
-                {/* Employee info */}
-                <div className="p-3 border-b border-r">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Avatar className="h-8 w-8">
-                      <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-sm font-semibold">
-                        {employee.name.charAt(0)}
-                      </div>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{employee.name}</div>
-                      <div className="text-xs text-muted-foreground">{used}h/{capacity}h</div>
-                    </div>
-                  </div>
-                  
-                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${capacityPercentage > 90 ? 'bg-red-500' : capacityPercentage > 70 ? 'bg-orange-500' : 'bg-green-500'}`} 
-                      style={{ width: `${capacityPercentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-                
-                {/* Days grid */}
-                {weekDays.map((day, dayIndex) => {
-                  const tasksForDay = getTasksForEmployeeAndDay(employee.id, day);
-                  const isWeekend = day.getDay() === 5 || day.getDay() === 6; // Friday or Saturday
-                  
-                  return (
-                    <div 
-                      key={dayIndex} 
-                      className={`border-b min-h-[100px] ${isWeekend ? 'bg-gray-100/60 dark:bg-gray-800/40' : ''}`}
-                    >
-                      <div className="h-full p-1">
-                        {tasksForDay.map(task => (
-                          <TaskAssignment 
-                            key={task.id} 
-                            task={task} 
-                            isOverCapacity={capacityPercentage > 100}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-          
-          {/* Unassigned row */}
-          <div className="p-3 border-r font-medium">
-            {t('unassigned')}
-          </div>
-          
-          {/* Unassigned tasks by day */}
-          {weekDays.map((day, dayIndex) => {
-            const unassignedTasks = tasks.filter(task => 
-              !task.assigneeId && 
-              task.startDate && 
-              task.endDate && 
-              new Date(task.startDate) <= day && 
-              new Date(task.endDate) >= day
-            );
-            
-            return (
-              <div key={dayIndex} className="border-b min-h-[60px]">
-                <div className="h-full p-1">
-                  {unassignedTasks.map(task => (
-                    <TaskAssignment 
-                      key={task.id} 
-                      task={task} 
-                      isUnassigned
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          ))}
+          {overCapacityTasks.length === 0 && <p>{t('noOverCapacityTasks')}</p>}
         </div>
-      </Card>
+        
+        <div>
+          <h2 className="text-lg font-semibold mb-2">{t('unassignedTasks')}</h2>
+          {unassignedTasks.map((task) => (
+            <div key={task.id} className="mb-2">
+              <TaskAssignment 
+                value={null}
+                onChange={() => {}}
+              />
+              <p>
+                {task.name} ({format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')})
+              </p>
+            </div>
+          ))}
+          {unassignedTasks.length === 0 && <p>{t('noUnassignedTasks')}</p>}
+        </div>
+        
+        <div>
+          <h2 className="text-lg font-semibold mb-2">{t('allTasks')} ({format(date, 'MMM dd')})</h2>
+          {getTasksForDate(date).map(task => (
+            <div key={task.id} className="mb-2">
+              <p>
+                {task.name} ({format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')})
+              </p>
+            </div>
+          ))}
+          {getTasksForDate(date).length === 0 && <p>{t('noTasksForSelectedDate')}</p>}
+        </div>
+      </div>
     </div>
   );
 }

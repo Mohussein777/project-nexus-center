@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/components/clients/types";
 import { mapDbClientToClient } from "./clientsMappers";
@@ -10,60 +9,38 @@ export type DbClient = Database['public']['Tables']['clients']['Row'];
 export const getClients = async (): Promise<Client[]> => {
   const { data: dbClients, error } = await supabase
     .from('clients')
-    .select('*');
-
+    .select('*')
+    .order('name');
+  
   if (error) {
     console.error('Error fetching clients:', error);
-    throw error;
+    return [];
   }
-
-  if (!dbClients) return [];
-
-  // Get project counts for each client
-  const projectCountPromises = dbClients.map(async (client) => {
-    const { count, error } = await supabase
-      .from('projects')
-      .select('*', { count: 'exact', head: true })
-      .eq('client_id', client.id);
-    
-    return { clientId: client.id, count: count || 0, error };
-  });
-
-  const projectCounts = await Promise.all(projectCountPromises);
   
-  return dbClients.map(dbClient => {
-    const projectCount = projectCounts.find(p => p.clientId === dbClient.id)?.count || 0;
-    return {
-      ...mapDbClientToClient(dbClient),
-      projects: projectCount
-    };
-  });
+  return (dbClients || []).map(dbClient => ({
+    ...mapDbClientToClient(dbClient),
+    projects: [] // Projects are loaded separately
+  }));
 };
 
 // Get client by ID
-export const getClientById = async (clientId: number): Promise<Client | null> => {
+export const getClientById = async (id: number): Promise<Client | null> => {
   const { data: dbClient, error } = await supabase
     .from('clients')
     .select('*')
-    .eq('id', clientId)
+    .eq('id', id)
     .single();
-
+  
   if (error) {
-    console.error(`Error fetching client with ID ${clientId}:`, error);
+    console.error(`Error fetching client with ID ${id}:`, error);
     return null;
   }
-
+  
   if (!dbClient) return null;
-
-  // Get project count
-  const { count: projectCount } = await supabase
-    .from('projects')
-    .select('*', { count: 'exact', head: true })
-    .eq('client_id', clientId);
-
+  
   return {
     ...mapDbClientToClient(dbClient),
-    projects: projectCount || 0
+    projects: [] // Projects are loaded separately
   };
 };
 
@@ -144,4 +121,23 @@ export const generateClientCode = async (): Promise<string> => {
   const newNumber = codeNumber + 1;
   
   return `C-${newNumber.toString().padStart(3, '0')}`;
+};
+
+// Search clients by query
+export const searchClients = async (query: string): Promise<Client[]> => {
+  const { data: dbClients, error } = await supabase
+    .from('clients')
+    .select('*')
+    .or(`name.ilike.%${query}%, email.ilike.%${query}%, location.ilike.%${query}%, code.ilike.%${query}%`)
+    .order('name');
+  
+  if (error) {
+    console.error('Error searching clients:', error);
+    return [];
+  }
+  
+  return (dbClients || []).map(dbClient => ({
+    ...mapDbClientToClient(dbClient),
+    projects: [] // Projects are loaded separately
+  }));
 };
