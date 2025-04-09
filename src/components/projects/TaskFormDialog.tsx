@@ -33,6 +33,7 @@ export function TaskFormDialog({
   const handleSubmit = async (taskData: any) => {
     try {
       setIsSubmitting(true);
+      console.log("Submitting task data:", taskData);
       const success = await onSubmit(taskData);
       
       if (success) {
@@ -50,7 +51,7 @@ export function TaskFormDialog({
       console.error("Error saving task:", error);
       toast({
         title: t('error'),
-        description: t('errorSavingTask'),
+        description: error instanceof Error ? error.message : t('errorSavingTask'),
         variant: "destructive",
       });
     } finally {

@@ -1,84 +1,85 @@
 
-import { useState } from "react";
-import { Client } from "./types";
-import { createClient } from "@/services/clientsService";
-import { useToast } from "@/components/ui/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
   DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { ClientForm, ClientFormValues } from "./ClientForm";
+import { ClientForm } from './ClientForm';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClientFormDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onClientAdded?: (client: Client) => void;
+  onSubmit: (clientData: any) => Promise<boolean>;
+  client?: any;
+  isEditing?: boolean;
 }
 
-export function ClientFormDialog({ open, onOpenChange, onClientAdded }: ClientFormDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+export function ClientFormDialog({ 
+  isOpen, 
+  onOpenChange, 
+  onSubmit, 
+  client, 
+  isEditing = false 
+}: ClientFormDialogProps) {
   const { t } = useLanguage();
-
-  const handleSubmit = async (values: ClientFormValues) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleSubmit = async (clientData: any) => {
     try {
       setIsSubmitting(true);
-      // Ensure all required properties are present by spreading the values directly
-      const newClient = await createClient({
-        name: values.name,
-        contact: values.contact,
-        email: values.email,
-        phone: values.phone,
-        location: values.location,
-        type: values.type,
-        status: values.status
-      });
+      // Generate a code if not provided
+      if (!clientData.code) {
+        clientData.code = `CL-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      }
       
-      if (newClient) {
+      const success = await onSubmit(clientData);
+      
+      if (success) {
         toast({
-          title: t('clientAddedSuccess'),
-          description: t('clientAddedSuccessDesc').replace('{name}', newClient.name) + ` (${newClient.code})`,
+          title: isEditing ? t('clientUpdated') : t('clientCreated'),
+          description: isEditing 
+            ? t('clientUpdatedSuccessfully') 
+            : t('clientCreatedSuccessfully'),
         });
-        
-        if (onClientAdded) {
-          onClientAdded(newClient);
-        }
+        onOpenChange(false);
       } else {
-        throw new Error(t('failedToAddClient'));
+        throw new Error(t('failedToSaveClient'));
       }
     } catch (error) {
-      console.error("Error adding client:", error);
+      console.error("Error saving client:", error);
       toast({
         title: t('error'),
-        description: t('errorAddingClient'),
+        description: error instanceof Error ? error.message : t('errorSavingClient'),
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
-
+  
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">{t('addNewClient')}</DialogTitle>
-          <DialogDescription>
-            {t('fillClientDetails')}
-          </DialogDescription>
+          <DialogTitle>
+            {isEditing ? t('editClient') : t('addNewClient')}
+          </DialogTitle>
+          {!isEditing && (
+            <DialogDescription>
+              {t('addNewClientDescription')}
+            </DialogDescription>
+          )}
         </DialogHeader>
-
         <ClientForm 
+          client={client} 
           onSubmit={handleSubmit} 
-          onCancel={handleCancel}
+          onCancel={() => onOpenChange(false)} 
           isSubmitting={isSubmitting}
         />
       </DialogContent>

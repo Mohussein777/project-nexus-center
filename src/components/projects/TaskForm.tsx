@@ -53,11 +53,21 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   });
 
   const onFormSubmit = async (values) => {
-    await onSubmit({
-      ...values,
-      assignee_id: assigneeId,
-      project_id: Number(projectId),
-    });
+    try {
+      console.log("Form submission values:", {
+        ...values,
+        assignee_id: assigneeId,
+        project_id: Number(projectId),
+      });
+      
+      await onSubmit({
+        ...values,
+        assignee_id: assigneeId,
+        project_id: Number(projectId),
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
   };
   
   return (
@@ -163,7 +173,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
-                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -203,7 +212,6 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
-                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>

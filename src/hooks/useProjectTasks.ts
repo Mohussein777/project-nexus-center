@@ -53,6 +53,7 @@ export function useProjectTasks() {
   
   const handleCreateTask = async (taskData) => {
     try {
+      console.log("Creating task with data:", taskData);
       const newTask = await createTask({
         ...taskData,
         project_id: projectId

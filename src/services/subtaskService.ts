@@ -23,12 +23,17 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
       return [];
     }
 
-    return (data || []).map(item => ({
-      id: item.id as string,
-      taskId: item.task_id as string,
-      title: item.title as string,
-      completed: item.completed as boolean,
-      createdAt: item.created_at as string
+    // Return empty array if no data
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    return data.map(item => ({
+      id: item.id,
+      taskId: item.task_id,
+      title: item.title,
+      completed: item.completed,
+      createdAt: item.created_at
     }));
   } catch (err) {
     console.error('Error in getSubtasks:', err);
@@ -54,12 +59,16 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
       return null;
     }
 
+    if (!data) {
+      return null;
+    }
+
     return {
-      id: data.id as string,
-      taskId: data.task_id as string,
-      title: data.title as string,
-      completed: data.completed as boolean,
-      createdAt: data.created_at as string
+      id: data.id,
+      taskId: data.task_id,
+      title: data.title,
+      completed: data.completed,
+      createdAt: data.created_at
     };
   } catch (err) {
     console.error('Error in createSubtask:', err);

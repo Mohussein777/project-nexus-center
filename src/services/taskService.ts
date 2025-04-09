@@ -53,14 +53,23 @@ export const createTask = async (task: {
   description?: string;
   project_id: number;
   assignee_id?: string;
-  start_date?: string;
-  end_date?: string;
+  start_date?: string | Date;
+  end_date?: string | Date;
   status: string;
   priority: string;
 }): Promise<Task | null> => {
+  // Convert Date objects to strings if needed
+  const taskData = {
+    ...task,
+    start_date: task.start_date instanceof Date ? task.start_date.toISOString() : task.start_date,
+    end_date: task.end_date instanceof Date ? task.end_date.toISOString() : task.end_date
+  };
+
+  console.log("Creating task with data:", taskData);
+
   const { data, error } = await supabase
     .from('tasks')
-    .insert(task)
+    .insert(taskData)
     .select()
     .single();
 
@@ -102,18 +111,23 @@ export const updateTask = async (id: string, task: {
   name?: string;
   description?: string;
   assignee_id?: string;
-  start_date?: string;
-  end_date?: string;
+  start_date?: string | Date;
+  end_date?: string | Date;
   status?: string;
   priority?: string;
   progress?: number;
 }): Promise<boolean> => {
+  // Convert Date objects to strings if needed
+  const taskData = {
+    ...task,
+    start_date: task.start_date instanceof Date ? task.start_date.toISOString() : task.start_date,
+    end_date: task.end_date instanceof Date ? task.end_date.toISOString() : task.end_date,
+    updated_at: new Date().toISOString()
+  };
+
   const { error } = await supabase
     .from('tasks')
-    .update({
-      ...task,
-      updated_at: new Date().toISOString()
-    })
+    .update(taskData)
     .eq('id', id);
 
   if (error) {

@@ -1,17 +1,18 @@
 
 import { useState, useEffect } from 'react';
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { createSubtask, getSubtasks, updateSubtask, deleteSubtask } from "@/services/subtaskService";
+import { Check, Plus, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { 
+  getSubtasks, 
+  createSubtask, 
+  updateSubtask, 
+  deleteSubtask,
+  Subtask 
+} from '@/services/subtaskService';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-interface Subtask {
-  id: string;
-  title: string;
-  completed: boolean;
-}
+import { useToast } from '@/hooks/use-toast';
 
 interface SubtaskChecklistProps {
   taskId: string;
@@ -20,74 +21,66 @@ interface SubtaskChecklistProps {
 export function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
-
+  const { toast } = useToast();
+  
   useEffect(() => {
-    const fetchSubtasks = async () => {
+    const loadSubtasks = async () => {
+      if (!taskId) return;
+      
       try {
-        const fetchedSubtasks = await getSubtasks(taskId);
-        setSubtasks(fetchedSubtasks);
+        setIsLoading(true);
+        const data = await getSubtasks(taskId);
+        setSubtasks(data);
       } catch (error) {
-        console.error("Error fetching subtasks:", error);
+        console.error('Error loading subtasks:', error);
         toast({
           title: t('error'),
-          description: t('errorFetchingSubtasks'),
+          description: t('errorLoadingSubtasks'),
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
-
-    if (taskId) {
-      fetchSubtasks();
-    }
-  }, [taskId, t, toast]);
-
-  const handleCreateSubtask = async () => {
+    
+    loadSubtasks();
+  }, [taskId, toast, t]);
+  
+  const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
-
+    
     try {
       const newSubtask = await createSubtask(taskId, newSubtaskTitle);
       if (newSubtask) {
-        setSubtasks([...subtasks, {
-          id: newSubtask.id,
-          title: newSubtask.title,
-          completed: newSubtask.completed,
-        }]);
+        setSubtasks(prev => [...prev, newSubtask]);
         setNewSubtaskTitle('');
-        toast({
-          title: t('success'),
-          description: t('subtaskCreatedSuccessfully'),
-        });
-      } else {
-        throw new Error(t('failedToCreateSubtask'));
       }
     } catch (error) {
-      console.error("Error creating subtask:", error);
+      console.error('Error adding subtask:', error);
       toast({
         title: t('error'),
-        description: t('errorCreatingSubtask'),
+        description: t('errorAddingSubtask'),
         variant: "destructive",
       });
     }
   };
-
-  const handleUpdateSubtask = async (subtaskId: string, updates: { title?: string; completed?: boolean }) => {
+  
+  const handleToggleSubtask = async (subtask: Subtask) => {
     try {
-      const success = await updateSubtask(subtaskId, updates);
+      const success = await updateSubtask(subtask.id, { completed: !subtask.completed });
       if (success) {
-        setSubtasks(subtasks.map(subtask =>
-          subtask.id === subtaskId ? { ...subtask, ...updates } : subtask
-        ));
-        toast({
-          title: t('success'),
-          description: t('subtaskUpdatedSuccessfully'),
-        });
-      } else {
-        throw new Error(t('failedToUpdateSubtask'));
+        setSubtasks(prev => 
+          prev.map(item => 
+            item.id === subtask.id 
+              ? { ...item, completed: !item.completed } 
+              : item
+          )
+        );
       }
     } catch (error) {
-      console.error("Error updating subtask:", error);
+      console.error('Error updating subtask:', error);
       toast({
         title: t('error'),
         description: t('errorUpdatingSubtask'),
@@ -95,21 +88,15 @@ export function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
       });
     }
   };
-
-  const handleDeleteSubtask = async (subtaskId: string) => {
+  
+  const handleDeleteSubtask = async (id: string) => {
     try {
-      const success = await deleteSubtask(subtaskId);
+      const success = await deleteSubtask(id);
       if (success) {
-        setSubtasks(subtasks.filter(subtask => subtask.id !== subtaskId));
-        toast({
-          title: t('success'),
-          description: t('subtaskDeletedSuccessfully'),
-        });
-      } else {
-        throw new Error(t('failedToDeleteSubtask'));
+        setSubtasks(prev => prev.filter(item => item.id !== id));
       }
     } catch (error) {
-      console.error("Error deleting subtask:", error);
+      console.error('Error deleting subtask:', error);
       toast({
         title: t('error'),
         description: t('errorDeletingSubtask'),
@@ -117,58 +104,73 @@ export function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
       });
     }
   };
-
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Label>{t('subtasks')}</Label>
+        <div className="h-20 w-full bg-gray-100 dark:bg-gray-800 animate-pulse rounded"></div>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-4">
-      <h4 className="text-sm font-medium">{t('subtasks')}</h4>
-      <div className="flex items-center space-x-2">
+      <Label>{t('subtasks')}</Label>
+      
+      <div className="space-y-2">
+        {subtasks.map(subtask => (
+          <div 
+            key={subtask.id} 
+            className="flex items-center gap-2 p-2 border rounded-md bg-background"
+          >
+            <Button 
+              type="button"
+              size="icon"
+              variant={subtask.completed ? "default" : "outline"}
+              className="h-6 w-6"
+              onClick={() => handleToggleSubtask(subtask)}
+            >
+              <Check className="h-4 w-4" />
+              <span className="sr-only">
+                {subtask.completed ? t('markAsIncomplete') : t('markAsComplete')}
+              </span>
+            </Button>
+            
+            <span className={`flex-1 ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
+              {subtask.title}
+            </span>
+            
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 text-destructive hover:text-destructive/90"
+              onClick={() => handleDeleteSubtask(subtask.id)}
+            >
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">{t('delete')}</span>
+            </Button>
+          </div>
+        ))}
+      </div>
+      
+      <div className="flex gap-2">
         <Input
-          type="text"
-          placeholder={t('addSubtask')}
+          placeholder={t('newSubtask')}
           value={newSubtaskTitle}
           onChange={(e) => setNewSubtaskTitle(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
         />
-        <Button size="sm" onClick={handleCreateSubtask}>
-          {t('create')}
+        <Button 
+          type="button" 
+          size="icon" 
+          onClick={handleAddSubtask}
+        >
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">{t('addSubtask')}</span>
         </Button>
       </div>
-      <ul className="space-y-2">
-        {subtasks.map((subtask) => (
-          <li key={subtask.id} className="flex items-center space-x-2">
-            <Checkbox
-              id={`subtask-${subtask.id}`}
-              checked={subtask.completed}
-              onCheckedChange={(checked) => handleUpdateSubtask(subtask.id, { completed: checked === true })}
-            />
-            <label
-              htmlFor={`subtask-${subtask.id}`}
-              className="text-sm leading-none peer-disabled:cursor-not-allowed flex-1"
-            >
-              {subtask.title}
-            </label>
-            <Button variant="ghost" size="icon" onClick={() => handleDeleteSubtask(subtask.id)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-trash-2"
-              >
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                <line x1="10" x2="10" y1="11" y2="17" />
-                <line x1="14" x2="14" y1="11" y2="17" />
-              </svg>
-            </Button>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

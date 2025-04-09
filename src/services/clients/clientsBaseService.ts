@@ -45,8 +45,14 @@ export const getClientById = async (id: number): Promise<Client | null> => {
     return null;
   }
   
+  // Generate a code if it doesn't exist
+  const clientData = dbClient as DbClient;
+  if (!clientData.code) {
+    clientData.code = `CL-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+  }
+  
   return {
-    ...mapDbClientToClient(dbClient as DbClient),
+    ...mapDbClientToClient(clientData),
     projects: 0 // Projects are loaded separately
   };
 };
@@ -126,7 +132,7 @@ export const searchClients = async (searchTerm: string): Promise<Client[]> => {
   const { data: dbClients, error } = await supabase
     .from('clients')
     .select('*')
-    .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%${searchTerm.length > 0 ? `,code.ilike.%${searchTerm}%` : ''}`)
+    .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
     .order('name');
   
   if (error) {
@@ -134,10 +140,18 @@ export const searchClients = async (searchTerm: string): Promise<Client[]> => {
     return [];
   }
   
-  return (dbClients || []).map(dbClient => ({
-    ...mapDbClientToClient(dbClient as DbClient),
-    projects: 0 // Projects are loaded separately
-  }));
+  return (dbClients || []).map(dbClient => {
+    // Generate a code if it doesn't exist
+    const clientData = dbClient as DbClient;
+    if (!clientData.code) {
+      clientData.code = `CL-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    }
+    
+    return {
+      ...mapDbClientToClient(clientData),
+      projects: 0 // Projects are loaded separately
+    };
+  });
 };
 
 export const filterClients = async (filters: {
@@ -164,8 +178,16 @@ export const filterClients = async (filters: {
     return [];
   }
   
-  return (dbClients || []).map(dbClient => ({
-    ...mapDbClientToClient(dbClient as DbClient),
-    projects: 0 // Projects are loaded separately
-  }));
+  return (dbClients || []).map(dbClient => {
+    // Generate a code if it doesn't exist
+    const clientData = dbClient as DbClient;
+    if (!clientData.code) {
+      clientData.code = `CL-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    }
+    
+    return {
+      ...mapDbClientToClient(clientData),
+      projects: 0 // Projects are loaded separately
+    };
+  });
 };
