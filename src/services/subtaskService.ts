@@ -88,13 +88,12 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
 };
 
 // Delete a subtask
-export const deleteSubtask = async (id: string, taskId: string): Promise<boolean> => {
+export const deleteSubtask = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('subtasks')
       .delete()
-      .eq('id', id)
-      .eq('task_id', taskId);
+      .eq('id', id);
 
     if (error) {
       console.error('Error deleting subtask:', error);

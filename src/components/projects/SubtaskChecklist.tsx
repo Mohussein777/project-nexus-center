@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -97,12 +98,16 @@ export function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
 
   const handleDeleteSubtask = async (subtaskId: string) => {
     try {
-      await deleteSubtask(subtaskId, taskId);
-      setSubtasks(subtasks.filter(subtask => subtask.id !== subtaskId));
-      toast({
-        title: t('success'),
-        description: t('subtaskDeletedSuccessfully'),
-      });
+      const success = await deleteSubtask(subtaskId);
+      if (success) {
+        setSubtasks(subtasks.filter(subtask => subtask.id !== subtaskId));
+        toast({
+          title: t('success'),
+          description: t('subtaskDeletedSuccessfully'),
+        });
+      } else {
+        throw new Error(t('failedToDeleteSubtask'));
+      }
     } catch (error) {
       console.error("Error deleting subtask:", error);
       toast({

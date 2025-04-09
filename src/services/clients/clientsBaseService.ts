@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/components/clients/types";
 import { mapDbClientToClient } from "./clientsMappers";
@@ -19,7 +20,7 @@ export const getClients = async (): Promise<Client[]> => {
   
   return (dbClients || []).map(dbClient => ({
     ...mapDbClientToClient(dbClient),
-    projects: [] // Projects are loaded separately
+    projects: 0 // Projects are loaded separately
   }));
 };
 
@@ -40,7 +41,7 @@ export const getClientById = async (id: number): Promise<Client | null> => {
   
   return {
     ...mapDbClientToClient(dbClient),
-    projects: [] // Projects are loaded separately
+    projects: 0 // Projects are loaded separately
   };
 };
 
@@ -138,6 +139,6 @@ export const searchClients = async (query: string): Promise<Client[]> => {
   
   return (dbClients || []).map(dbClient => ({
     ...mapDbClientToClient(dbClient),
-    projects: [] // Projects are loaded separately
+    projects: 0 // Projects are loaded separately
   }));
 };

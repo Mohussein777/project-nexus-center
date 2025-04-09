@@ -39,7 +39,7 @@ export const mapDbContractToContract = (dbContract: DbContract): Contract => {
     startDate: dbContract.start_date,
     endDate: dbContract.end_date,
     value: dbContract.value,
-    status: dbContract.status as "Active" | "Completed" | "Pending" | "Cancelled",
+    status: dbContract.status as "Active" | "Pending" | "Expired",
     renewalAlert: dbContract.renewal_alert,
   };
 };

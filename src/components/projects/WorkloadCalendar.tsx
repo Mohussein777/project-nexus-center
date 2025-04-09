@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -113,10 +114,10 @@ export function WorkloadCalendar() {
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
-              mode="month"
+              mode="single"
               defaultMonth={date}
               selected={date}
-              onSelect={setDate}
+              onSelect={(newDate) => newDate && setDate(newDate)}
               numberOfMonths={1}
             />
           </PopoverContent>
