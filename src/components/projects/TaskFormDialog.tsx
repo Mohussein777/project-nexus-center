@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { TaskForm } from './TaskForm';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TaskFormDialogProps {
   isOpen: boolean;
@@ -25,11 +27,34 @@ export function TaskFormDialog({
   isEditing = false 
 }: TaskFormDialogProps) {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleSubmit = async (taskData: any) => {
-    const success = await onSubmit(taskData);
-    if (success) {
-      onOpenChange(false);
+    try {
+      setIsSubmitting(true);
+      const success = await onSubmit(taskData);
+      
+      if (success) {
+        toast({
+          title: isEditing ? t('taskUpdated') : t('taskCreated'),
+          description: isEditing 
+            ? t('taskUpdatedSuccessfully') 
+            : t('taskCreatedSuccessfully'),
+        });
+        onOpenChange(false);
+      } else {
+        throw new Error(t('failedToSaveTask'));
+      }
+    } catch (error) {
+      console.error("Error saving task:", error);
+      toast({
+        title: t('error'),
+        description: t('errorSavingTask'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   

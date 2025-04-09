@@ -1,6 +1,8 @@
 
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Building2, MapPin, Mail, Phone, ChevronRight } from 'lucide-react';
 import { Client } from './types';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ClientCardProps {
@@ -11,82 +13,83 @@ interface ClientCardProps {
 export function ClientCard({ client, onSelect }: ClientCardProps) {
   const { t } = useLanguage();
   
-  const getClientType = (type: string) => {
-    switch(type) {
-      case 'Corporate': return t('corporate');
-      case 'Government': return t('government');
-      case 'Individual': return t('individual');
-      default: return type;
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'Inactive': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+      default: return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
     }
   };
-
+  
+  // Get client type color
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'Corporate': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+      case 'Government': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300';
+      case 'Individual': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+  
   return (
-    <div 
-      className="glass-card dark:glass-card-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-      onClick={() => onSelect(client.id)}
-    >
+    <div className="glass-card dark:glass-card-dark rounded-xl overflow-hidden border border-border">
       <div className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-semibold text-lg">{client.name}</h3>
-            <p className="text-sm text-muted-foreground">{client.contact}</p>
+        <div className="flex justify-between">
+          <h3 className="text-lg font-semibold">{client.name}</h3>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className={getTypeColor(client.type)}>
+              {t(client.type.toLowerCase())}
+            </Badge>
+            
+            <Badge variant="outline" className={getStatusColor(client.status)}>
+              {t(client.status.toLowerCase())}
+            </Badge>
           </div>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            client.status === 'Active' 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-          }`}>
-            {client.status === 'Active' ? t('active') : t('inactive')}
-          </span>
         </div>
         
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center text-sm">
-            <Mail size={14} className="mr-2 text-muted-foreground" />
-            <a href={`mailto:${client.email}`} className="text-primary hover:underline">{client.email}</a>
+        <div className="flex items-center mt-1 text-muted-foreground text-sm">
+          <span className="font-medium mr-1">{t('code')}</span>
+          <span>{client.code}</span>
+        </div>
+        
+        <div className="mt-3 space-y-1.5">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Building2 className="h-4 w-4 mr-2" />
+            <span>{client.contact}</span>
           </div>
-          <div className="flex items-center text-sm">
-            <Phone size={14} className="mr-2 text-muted-foreground" />
+          
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Mail className="h-4 w-4 mr-2" />
+            <span>{client.email}</span>
+          </div>
+          
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Phone className="h-4 w-4 mr-2" />
             <span>{client.phone}</span>
           </div>
-          <div className="flex items-center text-sm">
-            <MapPin size={14} className="mr-2 text-muted-foreground" />
+          
+          <div className="flex items-center text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 mr-2" />
             <span>{client.location}</span>
           </div>
         </div>
         
-        <div className="mt-4 text-sm">
-          <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full px-2.5 py-0.5">
-            {getClientType(client.type)}
-          </span>
-          <span className="mr-2 text-muted-foreground">
-            {client.projects} {client.projects === 1 ? 'مشروع' : 'مشاريع'}
-          </span>
+        <div className="mt-3 text-sm">
+          <span className="font-medium">{t('projects')}: </span>
+          <span>{client.projects}</span>
         </div>
       </div>
       
-      <div className="border-t border-border flex divide-x divide-border">
-        <button 
-          className="flex-1 px-3 py-2 text-sm text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(client.id);
-          }}
+      <div className="border-t p-2 bg-muted/30">
+        <Button 
+          variant="ghost" 
+          className="w-full flex justify-between items-center text-primary"
+          onClick={() => onSelect(client.id)}
         >
-          {t('viewProfile')}
-        </button>
-        <button 
-          className="flex-1 px-3 py-2 text-sm text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {t('clientProjects')}
-        </button>
-        <button 
-          className="flex-1 px-3 py-2 text-sm text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {t('invoices')}
-        </button>
+          <span>{t('viewDetails')}</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

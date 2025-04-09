@@ -1,273 +1,235 @@
 
-import { useState } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
-import { Calendar } from '../ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Label } from '../ui/label';
-import { CalendarIcon } from 'lucide-react';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '../ui/form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+} from "@/components/ui/select";
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useParams } from 'react-router-dom';
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { TaskAssignment } from "./TaskAssignment";
+import { SubtaskChecklist } from "./SubtaskChecklist";
+import { cn } from "@/lib/utils";
 
-const taskSchema = z.object({
-  name: z.string().min(2, {
-    message: 'يجب أن يحتوي اسم المهمة على حرفين على الأقل',
-  }),
-  description: z.string().optional(),
-  assignee: z.string().min(2, {
-    message: 'يرجى تحديد الشخص المسؤول عن المهمة',
-  }),
-  startDate: z.date({
-    required_error: 'يرجى تحديد تاريخ البدء',
-  }),
-  endDate: z.date({
-    required_error: 'يرجى تحديد تاريخ الانتهاء',
-  }),
-  priority: z.enum(['Low', 'Medium', 'High', 'Urgent'], {
-    required_error: 'يرجى تحديد الأولوية',
-  }),
-  status: z.enum(['Not Started', 'In Progress', 'Review', 'At Risk', 'Completed'], {
-    required_error: 'يرجى تحديد الحالة',
-  }),
-});
-
-type TaskFormValues = z.infer<typeof taskSchema>;
-
-interface TaskFormProps {
-  task?: any;
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-}
-
-export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
-  const defaultValues: Partial<TaskFormValues> = {
-    name: task?.name || '',
-    description: task?.description || '',
-    assignee: task?.assignee || '',
-    startDate: task?.startDate ? new Date(task.startDate) : new Date(),
-    endDate: task?.endDate ? new Date(task.endDate) : new Date(),
-    priority: task?.priority || 'Medium',
-    status: task?.status || 'Not Started',
-  };
-
-  const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskSchema),
-    defaultValues,
+export function TaskForm({ task, onSubmit, onCancel }) {
+  const { t } = useLanguage();
+  const { projectId } = useParams();
+  const [selectedEmployee, setSelectedEmployee] = useState(task?.assigneeId || null);
+  
+  const form = useForm({
+    defaultValues: {
+      name: task?.name || "",
+      description: task?.description || "",
+      startDate: task?.startDate ? new Date(task.startDate) : undefined,
+      endDate: task?.endDate ? new Date(task.endDate) : undefined,
+      status: task?.status || "Not Started",
+      priority: task?.priority || "Medium",
+    },
   });
 
-  function onFormSubmit(values: TaskFormValues) {
-    onSubmit({
-      ...task,
+  const onFormSubmit = async (values) => {
+    await onSubmit({
       ...values,
-      startDate: format(values.startDate, 'yyyy-MM-dd'),
-      endDate: format(values.endDate, 'yyyy-MM-dd'),
-      progress: task?.progress || 0,
-      dependencies: task?.dependencies || [],
+      assignee_id: selectedEmployee,
+      project_id: Number(projectId),
     });
-  }
-
+  };
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>اسم المهمة</FormLabel>
+                <FormLabel>{t('taskName')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="أدخل اسم المهمة" {...field} />
+                  <Input placeholder={t('enterTaskName')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="assignee"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>المسؤول</FormLabel>
-                <FormControl>
-                  <Input placeholder="اسم المسؤول عن المهمة" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          
+          <TaskAssignment 
+            selectedEmployee={selectedEmployee}
+            onEmployeeChange={setSelectedEmployee}
           />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>تاريخ البدء</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="ml-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, 'PPP', { locale: ar })
-                        ) : (
-                          <span>اختر تاريخ البدء</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>تاريخ الانتهاء</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="ml-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, 'PPP', { locale: ar })
-                        ) : (
-                          <span>اختر تاريخ الانتهاء</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>الأولوية</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الأولوية" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Low">منخفضة</SelectItem>
-                    <SelectItem value="Medium">متوسطة</SelectItem>
-                    <SelectItem value="High">عالية</SelectItem>
-                    <SelectItem value="Urgent">عاجلة</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+          
           <FormField
             control={form.control}
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الحالة</FormLabel>
+                <FormLabel>{t('status')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="اختر الحالة" />
+                      <SelectValue placeholder={t('selectStatus')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Not Started">لم تبدأ</SelectItem>
-                    <SelectItem value="In Progress">قيد التنفيذ</SelectItem>
-                    <SelectItem value="Review">في المراجعة</SelectItem>
-                    <SelectItem value="At Risk">متأخرة</SelectItem>
-                    <SelectItem value="Completed">مكتملة</SelectItem>
+                    <SelectItem value="Not Started">{t('notStarted')}</SelectItem>
+                    <SelectItem value="In Progress">{t('inProgress')}</SelectItem>
+                    <SelectItem value="Review">{t('review')}</SelectItem>
+                    <SelectItem value="Completed">{t('completed')}</SelectItem>
+                    <SelectItem value="At Risk">{t('atRisk')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
+          <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('priority')}</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectPriority')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Low">{t('low')}</SelectItem>
+                    <SelectItem value="Medium">{t('medium')}</SelectItem>
+                    <SelectItem value="High">{t('high')}</SelectItem>
+                    <SelectItem value="Urgent">{t('urgent')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>{t('startDate')}</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PP")
+                        ) : (
+                          <span>{t('selectDate')}</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>{t('endDate')}</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PP")
+                        ) : (
+                          <span>{t('selectDate')}</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-
+        
         <FormField
           control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>الوصف</FormLabel>
+              <FormLabel>{t('description')}</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="وصف تفصيلي للمهمة"
-                  className="h-24"
-                  {...field}
+                <Textarea 
+                  placeholder={t('enterDescription')}
+                  className="min-h-32"
+                  {...field} 
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onCancel} type="button">
-            إلغاء
+        
+        {task?.id && <SubtaskChecklist taskId={task.id} />}
+        
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t('cancel')}
           </Button>
           <Button type="submit">
-            {task ? 'تحديث المهمة' : 'إنشاء المهمة'}
+            {task ? t('updateTask') : t('createTask')}
           </Button>
         </div>
       </form>
