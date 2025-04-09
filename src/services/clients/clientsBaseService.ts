@@ -2,11 +2,20 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/components/clients/types";
 import { mapDbClientToClient } from "./clientsMappers";
-import { Database } from "@/integrations/supabase/types";
 
-export type DbClient = Database['public']['Tables']['clients']['Row'];
+export interface DbClient {
+  id: number;
+  name: string;
+  contact: string;
+  email: string;
+  phone: string;
+  location: string;
+  type: string;
+  status: string;
+  created_at: string;
+  code?: string;
+}
 
-// Get all clients
 export const getClients = async (): Promise<Client[]> => {
   const { data: dbClients, error } = await supabase
     .from('clients')
@@ -19,12 +28,11 @@ export const getClients = async (): Promise<Client[]> => {
   }
   
   return (dbClients || []).map(dbClient => ({
-    ...mapDbClientToClient(dbClient),
+    ...mapDbClientToClient(dbClient as DbClient),
     projects: 0 // Projects are loaded separately
   }));
 };
 
-// Get client by ID
 export const getClientById = async (id: number): Promise<Client | null> => {
   const { data: dbClient, error } = await supabase
     .from('clients')
@@ -37,99 +45,88 @@ export const getClientById = async (id: number): Promise<Client | null> => {
     return null;
   }
   
-  if (!dbClient) return null;
-  
   return {
-    ...mapDbClientToClient(dbClient),
+    ...mapDbClientToClient(dbClient as DbClient),
     projects: 0 // Projects are loaded separately
   };
 };
 
-// Create a new client
-export const createClient = async (client: Omit<Client, 'id' | 'projects' | 'code'>): Promise<Client | null> => {
-  const clientCode = await generateClientCode();
-  
-  const { data: dbClient, error } = await supabase
+export const createClient = async (client: {
+  name: string;
+  contact: string;
+  email: string;
+  phone: string;
+  location: string;
+  type: string;
+  status: string;
+  code: string;
+}): Promise<Client | null> => {
+  const { data: newClient, error } = await supabase
     .from('clients')
-    .insert({
-      name: client.name,
-      contact: client.contact,
-      email: client.email,
-      phone: client.phone,
-      location: client.location,
-      type: client.type,
-      status: client.status,
-      code: clientCode
-    })
+    .insert([client])
     .select()
     .single();
-
+  
   if (error) {
     console.error('Error creating client:', error);
     return null;
   }
-
+  
   return {
-    ...mapDbClientToClient(dbClient),
-    projects: 0 // New client has no projects
+    ...mapDbClientToClient(newClient as DbClient),
+    projects: 0 // Can't have projects yet
   };
 };
 
-// Update a client
-export const updateClient = async (id: number, client: Partial<Omit<Client, 'id' | 'projects'>>): Promise<boolean> => {
+export const updateClient = async (
+  id: number,
+  updates: {
+    name?: string;
+    contact?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    type?: string;
+    status?: string;
+    code?: string;
+  }
+): Promise<boolean> => {
+  // Handle nullable fields correctly
+  const updatesWithNulls = { ...updates };
+  if (updates.phone === '') updatesWithNulls.phone = null;
+  
   const { error } = await supabase
     .from('clients')
-    .update({
-      name: client.name,
-      contact: client.contact,
-      email: client.email,
-      phone: client.phone,
-      location: client.location,
-      type: client.type,
-      status: client.status,
-      code: client.code
-    })
+    .update(updatesWithNulls)
     .eq('id', id);
-
+  
   if (error) {
-    console.error(`Error updating client ${id}:`, error);
+    console.error(`Error updating client with ID ${id}:`, error);
     return false;
   }
-
+  
   return true;
 };
 
-// Generate a new client code
-export const generateClientCode = async (): Promise<string> => {
-  const { data, error } = await supabase
+export const deleteClient = async (id: number): Promise<boolean> => {
+  const { error } = await supabase
     .from('clients')
-    .select('code')
-    .order('code', { ascending: false })
-    .limit(1);
+    .delete()
+    .eq('id', id);
   
   if (error) {
-    console.error('Error fetching latest client code:', error);
-    return 'C-001'; // Default code if fetching fails
+    console.error(`Error deleting client with ID ${id}:`, error);
+    return false;
   }
   
-  if (!data || data.length === 0) {
-    return 'C-001'; // Default code if no clients exist
-  }
-  
-  // Handle case where code might be null in the database
-  const lastCode = data[0]?.code || 'C-000';
-  const codeNumber = parseInt(lastCode.split('-')[1], 10);
-  const newNumber = codeNumber + 1;
-  
-  return `C-${newNumber.toString().padStart(3, '0')}`;
+  return true;
 };
 
-// Search clients by query
-export const searchClients = async (query: string): Promise<Client[]> => {
+export const searchClients = async (searchTerm: string): Promise<Client[]> => {
   const { data: dbClients, error } = await supabase
     .from('clients')
     .select('*')
-    .or(`name.ilike.%${query}%, email.ilike.%${query}%, location.ilike.%${query}%, code.ilike.%${query}%`)
+    .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%${searchTerm.length > 0 ? `,code.ilike.%${searchTerm}%` : ''}`)
     .order('name');
   
   if (error) {
@@ -138,7 +135,37 @@ export const searchClients = async (query: string): Promise<Client[]> => {
   }
   
   return (dbClients || []).map(dbClient => ({
-    ...mapDbClientToClient(dbClient),
+    ...mapDbClientToClient(dbClient as DbClient),
+    projects: 0 // Projects are loaded separately
+  }));
+};
+
+export const filterClients = async (filters: {
+  status?: string;
+  type?: string;
+}): Promise<Client[]> => {
+  // Start with base query
+  let query = supabase.from('clients').select('*');
+  
+  // Apply filters
+  if (filters.status) {
+    query = query.eq('status', filters.status);
+  }
+  
+  if (filters.type) {
+    query = query.eq('type', filters.type);
+  }
+  
+  // Execute query
+  const { data: dbClients, error } = await query.order('name');
+  
+  if (error) {
+    console.error('Error filtering clients:', error);
+    return [];
+  }
+  
+  return (dbClients || []).map(dbClient => ({
+    ...mapDbClientToClient(dbClient as DbClient),
     projects: 0 // Projects are loaded separately
   }));
 };

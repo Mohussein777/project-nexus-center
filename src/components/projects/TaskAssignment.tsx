@@ -26,12 +26,12 @@ export function TaskAssignment({ value, onChange }: TaskAssignmentProps) {
   return (
     <div className="space-y-2">
       <Label>{t('assignTo')}</Label>
-      <Select value={value || ''} onValueChange={onChange}>
+      <Select value={value || undefined} onValueChange={(val) => onChange(val || null)}>
         <SelectTrigger>
           <SelectValue placeholder={t('selectEmployee')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">
+          <SelectItem value="unassigned">
             {t('unassigned')}
           </SelectItem>
           {employees.map((employee) => (

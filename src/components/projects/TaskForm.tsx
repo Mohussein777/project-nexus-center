@@ -163,6 +163,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -202,6 +203,7 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
                       selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
