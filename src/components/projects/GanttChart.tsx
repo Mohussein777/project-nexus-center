@@ -2,7 +2,8 @@
 import { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { TaskForm } from './TaskForm';
-import { useGanttChart, Task } from '@/hooks/useGanttChart';
+import { useGanttChart } from '@/hooks/useGanttChart';
+import { Task } from '@/services/tasks';
 import { GanttHeader } from './gantt/GanttHeader';
 import { GanttTaskBar } from './gantt/GanttTaskBar';
 import { GanttGrid } from './gantt/GanttGrid';

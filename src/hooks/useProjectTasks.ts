@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getProjectById } from '@/services/projectService';
-import { getTasks, createTask, updateTask, deleteTask } from '@/services/taskService';
+import { getTasks, createTask, updateTask, deleteTask, Task } from '@/services/tasks';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 
