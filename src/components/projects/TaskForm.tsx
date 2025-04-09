@@ -29,10 +29,17 @@ import { TaskAssignment } from "./TaskAssignment";
 import { SubtaskChecklist } from "./SubtaskChecklist";
 import { cn } from "@/lib/utils";
 
-export function TaskForm({ task, onSubmit, onCancel }) {
+// Define proper props for the TaskForm component
+interface TaskFormProps {
+  task: any;
+  onSubmit: (values: any) => Promise<void>;
+  onCancel: () => void;
+}
+
+export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   const { t } = useLanguage();
   const { projectId } = useParams();
-  const [selectedEmployee, setSelectedEmployee] = useState(task?.assigneeId || null);
+  const [assigneeId, setAssigneeId] = useState(task?.assigneeId || null);
   
   const form = useForm({
     defaultValues: {
@@ -48,7 +55,7 @@ export function TaskForm({ task, onSubmit, onCancel }) {
   const onFormSubmit = async (values) => {
     await onSubmit({
       ...values,
-      assignee_id: selectedEmployee,
+      assignee_id: assigneeId,
       project_id: Number(projectId),
     });
   };
@@ -72,8 +79,8 @@ export function TaskForm({ task, onSubmit, onCancel }) {
           />
           
           <TaskAssignment 
-            selectedEmployee={selectedEmployee}
-            onEmployeeChange={setSelectedEmployee}
+            value={assigneeId}
+            onChange={setAssigneeId}
           />
           
           <FormField

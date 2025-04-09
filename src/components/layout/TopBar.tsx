@@ -32,7 +32,7 @@ interface TopBarProps {
 
 export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps) {
   const { t, language, setLanguage } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchVisible, setSearchVisible] = useState(false);
   
@@ -142,7 +142,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
               {t('settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem onClick={signOut || (() => console.log('Sign out not implemented'))}>
               {t('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>

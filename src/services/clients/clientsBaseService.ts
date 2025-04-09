@@ -139,7 +139,7 @@ export const generateClientCode = async (): Promise<string> => {
   }
   
   // Handle case where code might be null in the database
-  const lastCode = data[0].code || 'C-000';
+  const lastCode = data[0]?.code || 'C-000';
   const codeNumber = parseInt(lastCode.split('-')[1], 10);
   const newNumber = codeNumber + 1;
   
