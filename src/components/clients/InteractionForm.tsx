@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createInteraction } from '@/services/clients/interactionsService';
 import { useToast } from '@/hooks/use-toast';
+import { Interaction } from './types';
 
 const formSchema = z.object({
   type: z.string().min(1, 'Type is required'),
@@ -45,7 +46,19 @@ export function InteractionForm({ clientId, onSuccess, onCancel }: InteractionFo
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      await createInteraction(clientId, values);
+      
+      // Create the interaction with required fields
+      const interactionData: Omit<Interaction, 'id'> = {
+        clientId: clientId,
+        date: new Date().toISOString(),
+        type: values.type as "Meeting" | "Call" | "Email" | "Note",
+        summary: values.summary,
+        employee: values.employee,
+        sentiment: values.sentiment as "Positive" | "Neutral" | "Negative" | undefined,
+        followupDate: values.followup_date
+      };
+      
+      await createInteraction(clientId, interactionData);
       toast({
         title: t('success'),
         description: t('interactionAddedSuccessfully'),
@@ -85,8 +98,7 @@ export function InteractionForm({ clientId, onSuccess, onCancel }: InteractionFo
                   <SelectItem value="Meeting">{t('meeting')}</SelectItem>
                   <SelectItem value="Call">{t('call')}</SelectItem>
                   <SelectItem value="Email">{t('email')}</SelectItem>
-                  <SelectItem value="Site Visit">{t('siteVisit')}</SelectItem>
-                  <SelectItem value="Other">{t('other')}</SelectItem>
+                  <SelectItem value="Note">{t('note')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

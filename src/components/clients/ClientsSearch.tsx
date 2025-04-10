@@ -6,15 +6,11 @@ import { Search, Plus, Filter } from 'lucide-react';
 import { ClientFormDialog } from './ClientFormDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Client } from './types';
+import { ClientsSearchProps } from './ClientsSearchProps';
 
-interface ClientsSearchProps {
-  onSearch: (query: string, filters: Record<string, string>) => void;
-  onClientAdded?: (client: Client) => void;
-}
-
-export function ClientsSearch({ onSearch, onClientAdded }: ClientsSearchProps) {
+export function ClientsSearch({ onSearch, searchQuery, setSearchQuery, onClientAdded }: ClientsSearchProps) {
   const { t } = useLanguage();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(searchQuery || '');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Record<string, string>>({
     status: '',
@@ -25,6 +21,14 @@ export function ClientsSearch({ onSearch, onClientAdded }: ClientsSearchProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(query, filters);
+  };
+  
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setQuery(newValue);
+    if (setSearchQuery) {
+      setSearchQuery(newValue);
+    }
   };
   
   const handleFilterChange = (key: string, value: string) => {
@@ -48,7 +52,7 @@ export function ClientsSearch({ onSearch, onClientAdded }: ClientsSearchProps) {
           <Input
             placeholder={t('searchClients')}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleQueryChange}
             className="pl-10"
           />
         </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,28 +11,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-
-interface Interaction {
-  id: number;
-  clientId: number;
-  date: string;
-  summary: string;
-  type: string;
-  followup_date?: string;
-  employee: string;
-  sentiment?: string;
-}
-
-interface Contract {
-  id: number;
-  clientId: number;
-  title: string;
-  status: string;
-  start_date: string;
-  end_date: string;
-  value: number;
-  renewal_alert: boolean;
-}
+import { Interaction, Contract } from './types';
+import { SatisfactionAnalysisProps } from './SatisfactionAnalysisProps';
 
 export function ClientProfile() {
   const { clientId } = useParams();
@@ -58,10 +39,11 @@ export function ClientProfile() {
             email: "contact@sample.com",
             phone: "+1 (555) 123-4567",
             contact: "John Doe",
-            location: "New York, NY"
+            location: "New York, NY",
+            projects: 5
           };
           
-          const interactionsData = [
+          const interactionsData: Interaction[] = [
             {
               id: 1,
               clientId: parseInt(clientId as string),
@@ -73,22 +55,22 @@ export function ClientProfile() {
             }
           ];
           
-          const contractsData = [
+          const contractsData: Contract[] = [
             {
               id: 1,
               clientId: parseInt(clientId as string),
               title: "Annual Support Contract",
               status: "Active",
-              start_date: "2023-01-01",
-              end_date: "2024-01-01",
+              startDate: "2023-01-01",
+              endDate: "2024-01-01",
               value: 50000,
-              renewal_alert: true
+              renewalAlert: true
             }
           ];
           
           setClient(clientData);
-          setInteractions(interactionsData as Interaction[]);
-          setContracts(contractsData as Contract[]);
+          setInteractions(interactionsData);
+          setContracts(contractsData);
           setLoading(false);
         }, 1000);
       } catch (error) {

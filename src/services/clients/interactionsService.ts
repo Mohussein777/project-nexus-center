@@ -28,7 +28,7 @@ export const createInteraction = async (clientId: number, interaction: Omit<Inte
     const { data, error } = await supabase
       .from('interactions')
       .insert({
-        clientid: clientId,
+        client_id: clientId,
         date: interaction.date,
         type: interaction.type,
         employee: interaction.employee,
@@ -46,7 +46,7 @@ export const createInteraction = async (clientId: number, interaction: Omit<Inte
     
     return {
       id: data.id,
-      clientId: data.clientid,
+      clientId: data.client_id,
       date: data.date,
       type: data.type as 'Meeting' | 'Call' | 'Email' | 'Note',
       employee: data.employee,

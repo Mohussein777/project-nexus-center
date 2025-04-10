@@ -23,4 +23,5 @@ export {
   removeTaskDependency
 };
 
+// Use "export type" to re-export types when isolatedModules is enabled
 export type { TaskCreate, TaskUpdate } from './tasks/types';

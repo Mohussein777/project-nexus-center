@@ -6,10 +6,11 @@ import { GanttLegend } from './gantt/GanttLegend';
 import { Button } from '@/components/ui/button';
 import { Filter, Plus, SlidersHorizontal, Clock } from 'lucide-react';
 import { Task } from '@/services/tasks/types';
-import { useGanttChart } from '@/hooks/useGanttChart';
+import { useGanttChart, GanttPosition } from '@/hooks/useGanttChart';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TaskFormDialog } from './TaskFormDialog';
 import { GanttTaskBar } from './gantt/GanttTaskBar';
+import { GanttHeaderProps } from './gantt/GanttHeaderProps';
 
 interface GanttChartProps {
   tasks: Task[];
@@ -25,7 +26,12 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const { 
-    startDate, 
+    selectedTask: ganttSelectedTask,
+    setSelectedTask: setGanttSelectedTask,
+    isEditDialogOpen,
+    setIsEditDialogOpen: setGanttIsEditDialogOpen,
+    visibleDays,
+    startDate,
     endDate,
     dateRange,
     cellWidth,
@@ -70,6 +76,12 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
   const getTaskStatusIcon = (task: any) => {
     // This is implemented elsewhere, just a stub for now
     return null;
+  };
+
+  const headerProps: GanttHeaderProps = {
+    startDate,
+    dateRange,
+    cellWidth
   };
   
   return (

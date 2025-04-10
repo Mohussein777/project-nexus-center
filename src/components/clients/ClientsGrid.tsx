@@ -6,39 +6,44 @@ import { Plus } from 'lucide-react';
 import { ClientCard } from './ClientCard';
 import { ClientFormDialog } from './ClientFormDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-interface Client {
-  id: number;
-  name: string;
-  status: string;
-  type: string;
-  email: string;
-  phone: string;
-  contact: string;
-}
-
-interface ClientsGridProps {
-  clients: Client[];
-  onClientUpdated?: (client: Client) => void;
-  onClientDeleted?: (clientId: number) => void;
-}
+import { Client, ClientsGridProps } from './types';
 
 export function ClientsGrid({ 
   clients,
   onClientUpdated,
-  onClientDeleted
+  onClientDeleted,
+  onClientSelect,
+  loading,
+  searchQuery,
+  onClientAdded
 }: ClientsGridProps) {
   const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const handleClientAdded = (client: Client) => {
     console.log('Client added:', client);
-    // In a real application, you would typically refresh the list or add the client to the existing list
+    if (onClientAdded) {
+      onClientAdded(client);
+    }
   };
   
   const handleClientClicked = (clientId: number) => {
-    window.location.href = `/clients/${clientId}`;
+    if (onClientSelect) {
+      onClientSelect(clientId);
+    } else {
+      window.location.href = `/clients/${clientId}`;
+    }
   };
+  
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center p-12">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -54,7 +59,7 @@ export function ClientsGrid({
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-12">
             <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">
-              {t('noClientsFound')}
+              {searchQuery ? t('noClientsMatchingSearch') : t('noClientsFound')}
             </p>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
