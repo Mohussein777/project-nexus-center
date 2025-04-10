@@ -5,11 +5,12 @@ import { TaskList } from './TaskList';
 import { KanbanBoard } from './KanbanBoard';
 import { GanttChart } from './GanttChart';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Task } from '@/services/tasks/types';
 
 interface TasksContentProps {
   activeTab: string;
-  tasks: any[];
-  onUpdateTask: (task: any) => Promise<boolean>;
+  tasks: Task[];
+  onUpdateTask: (task: Task) => Promise<boolean>;
   onDeleteTask: (taskId: string) => Promise<boolean>;
   onAddTask: () => void;
 }
@@ -23,13 +24,10 @@ export function TasksContent({
 }: TasksContentProps) {
   const { t } = useLanguage();
   
-  // Create wrapper functions to handle the different return types
-  const handleUpdateTaskPromise = async (task: any) => {
-    return await onUpdateTask(task);
-  };
-  
-  const handleUpdateTaskVoid = async (task: any) => {
-    await onUpdateTask(task);
+  // For GanttChart, we'll adapt the response type
+  const handleUpdateTaskForGantt = async (task: Task) => {
+    const result = await onUpdateTask(task);
+    return result;
   };
   
   return (
@@ -59,14 +57,15 @@ export function TasksContent({
         <TabsContent value="kanban" className="p-0 m-0">
           <KanbanBoard 
             tasks={tasks}
-            onUpdateTask={handleUpdateTaskPromise}
+            onUpdateTask={onUpdateTask}
           />
         </TabsContent>
         
         <TabsContent value="gantt" className="p-0 m-0">
           <GanttChart 
             tasks={tasks}
-            onUpdateTask={handleUpdateTaskVoid}
+            onAddTask={onAddTask}
+            onUpdateTask={handleUpdateTaskForGantt}
           />
         </TabsContent>
       </Tabs>

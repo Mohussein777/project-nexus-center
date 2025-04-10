@@ -1,10 +1,8 @@
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Client } from "./types";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
   Form,
   FormControl,
@@ -12,62 +10,67 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-// Define the form schema with Zod
-const formSchema = z.object({
-  name: z.string().min(2),
-  contact: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(8),
-  location: z.string().min(2),
-  type: z.enum(["Corporate", "Government", "Individual"]),
-  status: z.enum(["Active", "Inactive"]),
+const clientFormSchema = z.object({
+  name: z.string().min(2, 'Name is required'),
+  contact: z.string().min(2, 'Contact person is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
+  location: z.string().min(2, 'Location is required'),
+  status: z.enum(['Active', 'Inactive']),
+  type: z.enum(['Corporate', 'Government', 'Individual']),
+  code: z.string().optional()
 });
 
-export type ClientFormValues = z.infer<typeof formSchema>;
+export type ClientFormData = z.infer<typeof clientFormSchema>;
 
-interface ClientFormProps {
-  defaultValues?: ClientFormValues;
-  onSubmit: (values: ClientFormValues) => Promise<void>;
+export interface ClientFormProps {
+  client?: ClientFormData;
+  onSubmit: (data: ClientFormData) => void;
   onCancel: () => void;
-  isSubmitting: boolean;
+  isSubmitting?: boolean;
 }
 
-export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: ClientFormProps) {
-  const { t, language } = useLanguage();
+export function ClientForm({ client, onSubmit, onCancel, isSubmitting = false }: ClientFormProps) {
+  const { t } = useLanguage();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<ClientFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultValues || {
-      name: "",
-      contact: "",
-      email: "",
-      phone: "",
-      location: "",
-      type: "Corporate",
-      status: "Active",
-    },
+  const form = useForm<ClientFormData>({
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: client || {
+      name: '',
+      contact: '',
+      email: '',
+      phone: '',
+      location: '',
+      status: 'Active',
+      type: 'Corporate',
+      code: ''
+    }
   });
+
+  const handleSubmit = async (data: ClientFormData) => {
+    setIsLoading(true);
+    await onSubmit(data);
+    setIsLoading(false);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Client name */}
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('name')}</FormLabel>
+                <FormLabel>{t('clientName')}</FormLabel>
                 <FormControl>
                   <Input placeholder={t('enterClientName')} {...field} />
                 </FormControl>
@@ -76,6 +79,22 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
             )}
           />
 
+          {/* Client code */}
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('clientCode')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('enterClientCode')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Contact person */}
           <FormField
             control={form.control}
             name="contact"
@@ -90,6 +109,7 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
             )}
           />
 
+          {/* Email */}
           <FormField
             control={form.control}
             name="email"
@@ -97,13 +117,14 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
               <FormItem>
                 <FormLabel>{t('email')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterEmail')} type="email" {...field} />
+                  <Input placeholder={t('enterEmail')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Phone */}
           <FormField
             control={form.control}
             name="phone"
@@ -118,6 +139,7 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
             )}
           />
 
+          {/* Location */}
           <FormField
             control={form.control}
             name="location"
@@ -132,16 +154,20 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
             )}
           />
 
+          {/* Client type */}
           <FormField
             control={form.control}
             name="type"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('clientType')}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('selectType')} />
+                      <SelectValue placeholder={t('selectClientType')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -155,13 +181,17 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
             )}
           />
 
+          {/* Status */}
           <FormField
             control={form.control}
             name="status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('status')}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={t('selectStatus')} />
@@ -178,17 +208,17 @@ export function ClientForm({ defaultValues, onSubmit, onCancel, isSubmitting }: 
           />
         </div>
 
-        <div className="flex justify-end space-x-2 mt-6">
+        <div className="flex justify-end gap-2 pt-4">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            className={language === 'ar' ? 'ml-2' : 'mr-2'}
+            disabled={isSubmitting || isLoading}
           >
             {t('cancel')}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? t('savingClient') : t('saveClient')}
+          <Button type="submit" disabled={isSubmitting || isLoading}>
+            {isSubmitting || isLoading ? t('saving') : t('save')}
           </Button>
         </div>
       </form>

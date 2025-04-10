@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ClientInteraction, mapDbInteractionToClientInteraction } from "./clientsMappers";
+import { Interaction } from "@/components/clients/types";
 
 export const getClientInteractions = async (clientId: number): Promise<ClientInteraction[]> => {
   try {
@@ -21,12 +23,12 @@ export const getClientInteractions = async (clientId: number): Promise<ClientInt
   }
 };
 
-export const createClientInteraction = async (clientId: number, interaction: Omit<ClientInteraction, 'id'>): Promise<ClientInteraction | null> => {
+export const createInteraction = async (clientId: number, interaction: Omit<Interaction, 'id'>): Promise<Interaction | null> => {
   try {
     const { data, error } = await supabase
       .from('interactions')
       .insert({
-        client_id: clientId,
+        clientid: clientId,
         date: interaction.date,
         type: interaction.type,
         employee: interaction.employee,
@@ -42,9 +44,18 @@ export const createClientInteraction = async (clientId: number, interaction: Omi
       return null;
     }
     
-    return mapDbInteractionToClientInteraction(data);
+    return {
+      id: data.id,
+      clientId: data.clientid,
+      date: data.date,
+      type: data.type as 'Meeting' | 'Call' | 'Email' | 'Note',
+      employee: data.employee,
+      summary: data.summary,
+      sentiment: data.sentiment as 'Positive' | 'Neutral' | 'Negative' | undefined,
+      followupDate: data.followup_date
+    };
   } catch (error) {
-    console.error("Error in createClientInteraction:", error);
+    console.error("Error in createInteraction:", error);
     return null;
   }
 };

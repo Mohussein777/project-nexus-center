@@ -47,3 +47,17 @@ export interface SatisfactionMetric {
     negative: number;
   };
 }
+
+export interface ClientsGridProps {
+  clients: Client[];
+  onClientUpdated?: (client: Client) => void;
+  onClientDeleted?: (clientId: number) => void;
+  onClientSelect?: (clientId: number) => void;
+  loading?: boolean;
+  searchQuery?: string;
+  onClientAdded?: (client: Client) => void;
+}
+
+export interface SatisfactionAnalysisProps {
+  clientId: number;
+}

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GanttHeader } from './gantt/GanttHeader';
 import { GanttGrid } from './gantt/GanttGrid';
 import { GanttLegend } from './gantt/GanttLegend';
@@ -9,11 +9,12 @@ import { Task } from '@/services/tasks/types';
 import { useGanttChart } from '@/hooks/useGanttChart';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TaskFormDialog } from './TaskFormDialog';
+import { GanttTaskBar } from './gantt/GanttTaskBar';
 
 interface GanttChartProps {
   tasks: Task[];
   onAddTask: () => void;
-  onUpdateTask: (task: Task) => Promise<boolean>;
+  onUpdateTask: (task: Task) => Promise<any>;
 }
 
 export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) {
@@ -21,6 +22,7 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const { 
     startDate, 
@@ -32,6 +34,9 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
     setStartDate,
     setEndDate,
     handleTaskDateChange,
+    calculateTaskPosition,
+    isWeekend,
+    isToday
   } = useGanttChart();
   
   useEffect(() => {
@@ -40,31 +45,31 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
       const formattedTasks = tasks.map(task => ({
         id: task.id,
         name: task.name,
-        startDate: task.startDate ? new Date(task.startDate) : new Date(),
-        endDate: task.endDate ? new Date(task.endDate) : new Date(),
+        startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         status: task.status,
-        priority: task.priority,
-        progress: task.progress,
-        assigneeId: task.assigneeId,
-        assigneeName: task.assigneeName,
-        projectId: task.projectId,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt
+        assignee: task.assigneeName
       }));
       updateVisibleTasks(formattedTasks);
     }
   }, [tasks, updateVisibleTasks]);
   
-  const handleTaskClick = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      setSelectedTask(task);
+  const handleTaskClick = (task: any) => {
+    const fullTask = tasks.find(t => t.id === task.id);
+    if (fullTask) {
+      setSelectedTask(fullTask);
       setIsDialogOpen(true);
     }
   };
   
   const handleTaskUpdate = (taskData: Task) => {
     return onUpdateTask(taskData);
+  };
+  
+  // Generate a function that returns the status icon for a task
+  const getTaskStatusIcon = (task: any) => {
+    // This is implemented elsewhere, just a stub for now
+    return null;
   };
   
   return (
@@ -101,27 +106,29 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
       <div className="overflow-x-auto">
         <div className="min-width-gantt">
           <GanttHeader 
-            startDate={startDate} 
-            dateRange={dateRange} 
-            cellWidth={cellWidth} 
+            startDate={startDate}
+            dateRange={dateRange}
+            cellWidth={cellWidth}
           />
           <GanttGrid 
             tasks={visibleTasks} 
-            dateRange={dateRange} 
-            cellWidth={cellWidth}
+            visibleDays={dateRange}
+            isWeekend={isWeekend}
+            isToday={isToday}
+            scrollContainerRef={scrollContainerRef}
+            getTaskStatusIcon={getTaskStatusIcon}
             onTaskClick={handleTaskClick}
-            onTaskDateChange={(taskId, newStartDate, newEndDate) => {
-              const task = tasks.find(t => t.id === taskId);
-              if (task) {
-                const updatedTask = {
-                  ...task,
-                  startDate: newStartDate.toISOString().split('T')[0],
-                  endDate: newEndDate.toISOString().split('T')[0]
-                };
-                handleTaskUpdate(updatedTask);
-              }
-            }}
-          />
+          >
+            {visibleTasks.map((task, index) => (
+              <GanttTaskBar
+                key={task.id}
+                task={task}
+                position={calculateTaskPosition(task)}
+                index={index}
+                onClick={handleTaskClick}
+              />
+            ))}
+          </GanttGrid>
         </div>
       </div>
       

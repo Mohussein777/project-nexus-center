@@ -33,7 +33,7 @@ export function TaskAssignment({ value, onChange }: TaskAssignmentProps) {
           <SelectValue placeholder={t('selectEmployee')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">
+          <SelectItem value="unassigned">
             {t('unassigned')}
           </SelectItem>
           {employees.map((employee) => (

@@ -10,12 +10,13 @@ import { TaskForm } from './TaskForm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Task } from "@/services/tasks/types";
 
 interface TaskFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (taskData: any) => Promise<any>;
-  task?: any;
+  onSubmit: (taskData: Task) => Promise<any>;
+  task?: Task | null;
   isEditing?: boolean;
 }
 

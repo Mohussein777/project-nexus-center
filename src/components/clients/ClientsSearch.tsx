@@ -5,16 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Plus, Filter } from 'lucide-react';
 import { ClientFormDialog } from './ClientFormDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-interface Client {
-  id: number;
-  name: string;
-  status: string;
-  type: string;
-  email: string;
-  phone: string;
-  contact: string;
-}
+import { Client } from './types';
 
 interface ClientsSearchProps {
   onSearch: (query: string, filters: Record<string, string>) => void;

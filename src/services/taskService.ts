@@ -23,4 +23,4 @@ export {
   removeTaskDependency
 };
 
-export type { TaskCreate, TaskUpdate } from './tasks';
+export type { TaskCreate, TaskUpdate } from './tasks/types';
