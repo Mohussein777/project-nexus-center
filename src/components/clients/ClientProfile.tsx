@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,11 +14,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Interaction, Contract } from './types';
 import { SatisfactionAnalysisProps } from './SatisfactionAnalysisProps';
 
-export function ClientProfile() {
-  const { clientId } = useParams();
+export interface ClientProfileProps {
+  clientId?: number;
+}
+
+export function ClientProfile({ clientId: propClientId }: ClientProfileProps) {
+  const { clientId: paramClientId } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { toast } = useToast();
+  
+  const clientId = propClientId || (paramClientId ? parseInt(paramClientId) : undefined);
   
   const [client, setClient] = useState<any>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
@@ -26,11 +33,16 @@ export function ClientProfile() {
   
   useEffect(() => {
     const fetchClientData = async () => {
+      if (!clientId) {
+        navigate('/clients');
+        return;
+      }
+      
       try {
         // Placeholder for API call
         setTimeout(() => {
           const clientData = {
-            id: parseInt(clientId as string),
+            id: clientId,
             name: "Sample Client",
             code: "CLNT123",
             status: "Active",
@@ -45,7 +57,7 @@ export function ClientProfile() {
           const interactionsData: Interaction[] = [
             {
               id: 1,
-              clientId: parseInt(clientId as string),
+              clientId: clientId,
               date: "2023-01-15T10:30:00Z",
               summary: "Initial consultation meeting",
               type: "Meeting",
@@ -57,7 +69,7 @@ export function ClientProfile() {
           const contractsData: Contract[] = [
             {
               id: 1,
-              clientId: parseInt(clientId as string),
+              clientId: clientId,
               title: "Annual Support Contract",
               status: "Active",
               startDate: "2023-01-01",
@@ -83,10 +95,8 @@ export function ClientProfile() {
       }
     };
     
-    if (clientId) {
-      fetchClientData();
-    }
-  }, [clientId, toast, t]);
+    fetchClientData();
+  }, [clientId, navigate, toast, t]);
   
   const handleAddInteraction = (newInteraction: Interaction) => {
     setInteractions([...interactions, newInteraction]);
@@ -202,7 +212,7 @@ export function ClientProfile() {
         </TabsContent>
         
         <TabsContent value="satisfaction">
-          <SatisfactionAnalysis clientId={parseInt(clientId as string)} />
+          {clientId && <SatisfactionAnalysis clientId={clientId} />}
         </TabsContent>
       </Tabs>
     </div>

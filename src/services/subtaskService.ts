@@ -9,12 +9,15 @@ export interface Subtask {
   createdAt: string;
 }
 
+// Since the subtasks table is not properly defined in the Database types,
+// we need to use a more generic approach to access it
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
+    // Use a raw query to access the subtasks table
     const { data, error } = await supabase
       .from('subtasks')
-      .select('*')
+      .select()
       .eq('task_id', taskId)
       .order('created_at', { ascending: true });
 
@@ -51,7 +54,7 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
         title: title,
         completed: false
       })
-      .select('*')
+      .select()
       .single();
 
     if (error) {
