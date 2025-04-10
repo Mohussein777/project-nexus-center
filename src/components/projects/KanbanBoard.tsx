@@ -19,15 +19,18 @@ import { KanbanTask } from './KanbanTask';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { TaskForm } from './TaskForm';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Task } from '@/services/tasks/types';
 
 export interface KanbanBoardProps {
-  tasks: any[];
-  onUpdateTask: (task: any) => Promise<boolean>;
+  tasks: Task[];
+  onUpdateTask: (task: Task) => Promise<boolean>;
 }
 
 export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
   const { toast } = useToast();
-  const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const { t } = useLanguage();
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const sensors = useSensors(
@@ -38,11 +41,11 @@ export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
   );
   
   const columns = [
-    { id: 'Not Started', title: 'لم تبدأ' },
-    { id: 'In Progress', title: 'قيد التنفيذ' },
-    { id: 'Review', title: 'في المراجعة' },
-    { id: 'At Risk', title: 'متأخرة' },
-    { id: 'Completed', title: 'مكتملة' },
+    { id: 'Not Started', title: t('notStarted') || 'لم تبدأ' },
+    { id: 'In Progress', title: t('inProgress') || 'قيد التنفيذ' },
+    { id: 'Review', title: t('inReview') || 'في المراجعة' },
+    { id: 'At Risk', title: t('atRisk') || 'متأخرة' },
+    { id: 'Completed', title: t('completed') || 'مكتملة' },
   ];
   
   const getTasksByStatus = (status: string) => {
@@ -53,33 +56,57 @@ export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
-      const taskId = Number(active.id.toString().split('-')[1]);
+      // Extract the task ID from the draggable item ID
+      const taskIdStr = active.id.toString().split('-')[1]; 
+      const taskId = taskIdStr;
+      
+      // The target status is the column ID
       const newStatus = over.id.toString();
       
       if (columns.some(col => col.id === newStatus)) {
         const taskToUpdate = tasks.find(task => task.id === taskId);
         if (taskToUpdate) {
+          console.log(`Moving task ${taskId} to ${newStatus}`);
           const updatedTask = { ...taskToUpdate, status: newStatus };
-          onUpdateTask(updatedTask);
           
-          toast({
-            title: "تم التحديث",
-            description: "تم تحديث حالة المهمة بنجاح",
-          });
+          onUpdateTask(updatedTask)
+            .then(success => {
+              if (success) {
+                toast({
+                  title: t('taskUpdated'),
+                  description: t('taskStatusUpdated'),
+                });
+              } else {
+                toast({
+                  title: t('error'),
+                  description: t('errorUpdatingTask'),
+                  variant: "destructive",
+                });
+              }
+            })
+            .catch(error => {
+              console.error("Error updating task status:", error);
+              toast({
+                title: t('error'),
+                description: t('errorUpdatingTask'),
+                variant: "destructive",
+              });
+            });
         }
       }
     }
   };
   
-  const handleEditTask = (task: any) => {
+  const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setIsEditDialogOpen(true);
   };
   
-  const handleUpdateTask = async (updatedTask: any) => {
-    await onUpdateTask(updatedTask);
+  const handleUpdateTask = async (updatedTask: Task) => {
+    const result = await onUpdateTask(updatedTask);
     setIsEditDialogOpen(false);
     setSelectedTask(null);
+    return result;
   };
   
   return (
@@ -118,7 +145,7 @@ export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
-            <DialogTitle>تعديل المهمة</DialogTitle>
+            <DialogTitle>{t('editTask') || 'تعديل المهمة'}</DialogTitle>
           </DialogHeader>
           {selectedTask && (
             <TaskForm 

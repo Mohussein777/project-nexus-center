@@ -1,6 +1,5 @@
 
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ReactNode } from 'react';
 
 interface KanbanColumnProps {
@@ -11,7 +10,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ id, title, tasksCount, children }: KanbanColumnProps) {
-  const { setNodeRef } = useDroppable({ id });
+  const { setNodeRef, isOver } = useDroppable({ id });
   
   const getColumnColor = (columnId: string) => {
     switch (columnId) {
@@ -27,7 +26,9 @@ export function KanbanColumn({ id, title, tasksCount, children }: KanbanColumnPr
   return (
     <div 
       ref={setNodeRef}
-      className={`border-t-4 rounded-md shadow-sm bg-white dark:bg-gray-800 ${getColumnColor(id)}`}
+      className={`border-t-4 rounded-md shadow-sm ${getColumnColor(id)} ${
+        isOver ? 'ring-2 ring-primary ring-inset' : ''
+      }`}
     >
       <div className="p-2 flex items-center justify-between border-b">
         <h3 className="font-medium">{title}</h3>

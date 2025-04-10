@@ -4,10 +4,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { Clock, AlertOctagon, GripVertical } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { cn } from '@/lib/utils';
+import { Task } from '@/services/tasks/types';
 
 interface KanbanTaskProps {
   id: string;
-  task: any;
+  task: Task;
   onEdit: () => void;
 }
 
@@ -49,9 +50,17 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
   // Calculate if the task is overdue
   const isOverdue = () => {
     if (task.status === 'Completed') return false;
+    if (!task.endDate) return false;
+    
     const today = new Date();
     const endDate = new Date(task.endDate);
     return today > endDate;
+  };
+  
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-SA');
   };
   
   return (
@@ -59,11 +68,10 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "cursor-move relative overflow-hidden", 
+        "cursor-move relative overflow-hidden mb-2", 
         isDragging ? "opacity-50 z-10 shadow-lg" : "opacity-100",
         isOverdue() && "border-red-300 dark:border-red-700"
       )}
-      onClick={onEdit}
     >
       {isOverdue() && (
         <div className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-md">
@@ -71,11 +79,15 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
         </div>
       )}
       
-      <div className="absolute top-2 left-2 text-gray-400" {...attributes} {...listeners}>
+      <div 
+        className="absolute top-2 left-2 text-gray-400 cursor-grab active:cursor-grabbing" 
+        {...attributes} 
+        {...listeners}
+      >
         <GripVertical className="h-4 w-4" />
       </div>
       
-      <CardContent className="p-3">
+      <CardContent className="p-3" onClick={onEdit}>
         <h4 className="font-medium mb-2 pl-5">{task.name}</h4>
         
         <div className="flex justify-between items-center mb-2">
@@ -85,12 +97,12 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
           
           <div className="text-xs text-muted-foreground flex items-center">
             <Clock className="h-3 w-3 mr-1" />
-            {task.endDate}
+            {formatDate(task.endDate)}
           </div>
         </div>
         
         <div className="flex justify-between items-center">
-          <span className="text-xs text-muted-foreground">{task.assignee}</span>
+          <span className="text-xs text-muted-foreground">{task.assigneeName || '-'}</span>
           
           <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div 
@@ -103,7 +115,7 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
                       ? 'bg-purple-500'
                       : 'bg-blue-500'
               }`} 
-              style={{ width: `${task.progress}%` }}
+              style={{ width: `${task.progress || 0}%` }}
             ></div>
           </div>
         </div>
