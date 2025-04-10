@@ -1,51 +1,84 @@
 
 import { useState } from 'react';
-import { Search, Filter, Plus } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search, Plus, Filter } from 'lucide-react';
 import { ClientFormDialog } from './ClientFormDialog';
-import { Client } from './types';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+interface Client {
+  id: number;
+  name: string;
+  status: string;
+  type: string;
+  email: string;
+  phone: string;
+  contact: string;
+}
+
 interface ClientsSearchProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  onSearch: (query: string, filters: Record<string, string>) => void;
   onClientAdded?: (client: Client) => void;
 }
 
-export function ClientsSearch({ searchQuery, setSearchQuery, onClientAdded }: ClientsSearchProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+export function ClientsSearch({ onSearch, onClientAdded }: ClientsSearchProps) {
   const { t } = useLanguage();
-
+  const [query, setQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Record<string, string>>({
+    status: '',
+    type: ''
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(query, filters);
+  };
+  
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters({
+      ...filters,
+      [key]: value
+    });
+  };
+  
+  const handleClientAdded = (client: Client) => {
+    if (onClientAdded) {
+      onClientAdded(client);
+    }
+  };
+  
   return (
-    <>
-      <div className="flex items-center space-x-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            type="text"
+    <div className="space-y-4">
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
             placeholder={t('searchClients')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-4 py-2 border border-border rounded-lg text-sm w-60 focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white dark:bg-gray-800"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-10"
           />
         </div>
-        
-        <Button variant="outline" size="sm" className="gap-1">
-          <Filter size={16} />
-          <span>{t('filter')}</span>
+        <Button type="submit" variant="default">
+          {t('search')}
         </Button>
-        
-        <Button size="sm" className="gap-1" onClick={() => setIsDialogOpen(true)}>
-          <Plus size={16} />
-          <span>{t('newClient')}</span>
+        <Button type="button" variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="h-4 w-4 mr-2" />
+          {t('filter')}
         </Button>
-      </div>
+        <Button type="button" onClick={() => setIsDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          {t('addClient')}
+        </Button>
+      </form>
       
       <ClientFormDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        onClientAdded={onClientAdded}
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onClientAdded={handleClientAdded}
       />
-    </>
+    </div>
   );
 }

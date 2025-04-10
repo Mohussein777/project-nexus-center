@@ -52,7 +52,7 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
               )}
             >
               <Icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm">{label}</span>}
+              {!collapsed && <span className="text-sm whitespace-nowrap">{label}</span>}
             </NavLink>
           </TooltipTrigger>
           {collapsed && (

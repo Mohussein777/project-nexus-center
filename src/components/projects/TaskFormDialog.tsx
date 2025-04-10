@@ -9,12 +9,12 @@ import {
 import { TaskForm } from './TaskForm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (taskData: any) => Promise<boolean>;
+  onSubmit: (taskData: any) => Promise<any>;
   task?: any;
   isEditing?: boolean;
 }
@@ -34,9 +34,9 @@ export function TaskFormDialog({
     try {
       setIsSubmitting(true);
       console.log("Submitting task data:", taskData);
-      const success = await onSubmit(taskData);
+      const result = await onSubmit(taskData);
       
-      if (success) {
+      if (result) {
         toast({
           title: isEditing ? t('taskUpdated') : t('taskCreated'),
           description: isEditing 

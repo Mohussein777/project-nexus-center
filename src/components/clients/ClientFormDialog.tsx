@@ -1,4 +1,5 @@
 
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,23 +9,20 @@ import {
 } from "@/components/ui/dialog";
 import { ClientForm } from './ClientForm';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-interface ClientFormDialogProps {
+export interface ClientFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (clientData: any) => Promise<boolean>;
+  onClientAdded: (client: any) => void;
   client?: any;
-  isEditing?: boolean;
 }
 
 export function ClientFormDialog({ 
   isOpen, 
   onOpenChange, 
-  onSubmit, 
-  client, 
-  isEditing = false 
+  onClientAdded,
+  client
 }: ClientFormDialogProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -33,29 +31,24 @@ export function ClientFormDialog({
   const handleSubmit = async (clientData: any) => {
     try {
       setIsSubmitting(true);
-      // Generate a code if not provided
-      if (!clientData.code) {
-        clientData.code = `CL-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-      }
-      
-      const success = await onSubmit(clientData);
-      
-      if (success) {
-        toast({
-          title: isEditing ? t('clientUpdated') : t('clientCreated'),
-          description: isEditing 
-            ? t('clientUpdatedSuccessfully') 
-            : t('clientCreatedSuccessfully'),
+      // Handle client submission logic here
+      // This is just a placeholder
+      setTimeout(() => {
+        onClientAdded({
+          id: Date.now(),
+          ...clientData
         });
         onOpenChange(false);
-      } else {
-        throw new Error(t('failedToSaveClient'));
-      }
+        toast({
+          title: t('success'),
+          description: client ? t('clientUpdated') : t('clientAdded'),
+        });
+      }, 1000);
     } catch (error) {
       console.error("Error saving client:", error);
       toast({
         title: t('error'),
-        description: error instanceof Error ? error.message : t('errorSavingClient'),
+        description: t('errorSavingClient'),
         variant: "destructive",
       });
     } finally {
@@ -68,13 +61,11 @@ export function ClientFormDialog({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? t('editClient') : t('addNewClient')}
+            {client ? t('editClient') : t('addNewClient')}
           </DialogTitle>
-          {!isEditing && (
-            <DialogDescription>
-              {t('addNewClientDescription')}
-            </DialogDescription>
-          )}
+          <DialogDescription>
+            {t('clientFormDescription')}
+          </DialogDescription>
         </DialogHeader>
         <ClientForm 
           client={client} 

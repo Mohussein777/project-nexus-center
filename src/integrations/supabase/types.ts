@@ -245,7 +245,7 @@ export type Database = {
       }
       interactions: {
         Row: {
-          client_id: number
+          clientid: number
           created_at: string
           date: string
           employee: string
@@ -256,7 +256,7 @@ export type Database = {
           type: string
         }
         Insert: {
-          client_id: number
+          clientid: number
           created_at?: string
           date?: string
           employee: string
@@ -267,7 +267,7 @@ export type Database = {
           type: string
         }
         Update: {
-          client_id?: number
+          clientid?: number
           created_at?: string
           date?: string
           employee?: string
@@ -280,7 +280,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "interactions_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["clientid"]
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
@@ -367,6 +367,27 @@ export type Database = {
           phone?: string | null
           updated_at?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string | null
         }
         Relationships: []
       }
@@ -459,6 +480,7 @@ export type Database = {
       projects: {
         Row: {
           client_id: number
+          clientid: number | null
           created_at: string
           description: string | null
           end_date: string | null
@@ -473,6 +495,7 @@ export type Database = {
         }
         Insert: {
           client_id: number
+          clientid?: number | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -487,6 +510,7 @@ export type Database = {
         }
         Update: {
           client_id?: number
+          clientid?: number | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -500,6 +524,13 @@ export type Database = {
           tag?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_client"
+            columns: ["clientid"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_client_id_fkey"
             columns: ["client_id"]
