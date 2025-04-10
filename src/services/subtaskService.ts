@@ -21,9 +21,9 @@ const mapDbSubtaskToSubtask = (item: any): Subtask => ({
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
-    // Use Supabase API to query 'subtasks' explicitly as a string
+    // Use type assertion to work around TypeScript limitations with the table name
     const { data, error } = await supabase
-      .from('subtasks')
+      .from('subtasks' as any)
       .select('*')
       .eq('task_id', taskId);
 
@@ -46,9 +46,9 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
 // Create a new subtask
 export const createSubtask = async (taskId: string, title: string): Promise<Subtask | null> => {
   try {
-    // Use Supabase API to insert into 'subtasks' explicitly as a string
+    // Use type assertion to work around TypeScript limitations with the table name
     const { data, error } = await supabase
-      .from('subtasks')
+      .from('subtasks' as any)
       .insert([{ task_id: taskId, title, completed: false }])
       .select();
 
@@ -71,9 +71,9 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
 // Update a subtask
 export const updateSubtask = async (id: string, updates: { title?: string; completed?: boolean }): Promise<boolean> => {
   try {
-    // Use Supabase API to update 'subtasks' explicitly as a string
+    // Use type assertion to work around TypeScript limitations with the table name
     const { error } = await supabase
-      .from('subtasks')
+      .from('subtasks' as any)
       .update(updates)
       .eq('id', id);
 
@@ -92,9 +92,9 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
 // Delete a subtask
 export const deleteSubtask = async (id: string): Promise<boolean> => {
   try {
-    // Use Supabase API to delete from 'subtasks' explicitly as a string
+    // Use type assertion to work around TypeScript limitations with the table name
     const { error } = await supabase
-      .from('subtasks')
+      .from('subtasks' as any)
       .delete()
       .eq('id', id);
 
