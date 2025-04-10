@@ -1,16 +1,19 @@
 
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, addMonths, subMonths } from 'date-fns';
+import { ar } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { TaskAssignment } from './TaskAssignment';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -32,36 +35,36 @@ export function WorkloadCalendar() {
       {
         id: '1',
         name: 'Design Sprint',
-        startDate: new Date(2024, 9, 21),
-        endDate: new Date(2024, 9, 23),
+        startDate: new Date(2025, 3, 21),
+        endDate: new Date(2025, 3, 23),
         assignee_id: 'employee1',
       },
       {
         id: '2',
         name: 'Code Review',
-        startDate: new Date(2024, 9, 22),
-        endDate: new Date(2024, 9, 24),
+        startDate: new Date(2025, 3, 22),
+        endDate: new Date(2025, 3, 24),
         assignee_id: 'employee2',
       },
       {
         id: '3',
         name: 'Frontend Implementation',
-        startDate: new Date(2024, 9, 25),
-        endDate: new Date(2024, 9, 27),
+        startDate: new Date(2025, 3, 25),
+        endDate: new Date(2025, 3, 27),
         assignee_id: 'employee1',
       },
       {
         id: '4',
         name: 'Backend Implementation',
-        startDate: new Date(2024, 9, 25),
-        endDate: new Date(2024, 9, 27),
+        startDate: new Date(2025, 3, 25),
+        endDate: new Date(2025, 3, 27),
         assignee_id: 'employee3',
       },
       {
         id: '5',
         name: 'Testing and QA',
-        startDate: new Date(2024, 9, 28),
-        endDate: new Date(2024, 9, 29),
+        startDate: new Date(2025, 3, 28),
+        endDate: new Date(2025, 3, 29),
         assignee_id: null,
       },
     ];
@@ -96,78 +99,126 @@ export function WorkloadCalendar() {
   
   const overCapacityTasks = getOverCapacityTasks(date);
   const unassignedTasks = getUnassignedTasks(date);
+  const allTasks = getTasksForDate(date);
+
+  const goToPreviousMonth = () => {
+    setDate(prevDate => subMonths(prevDate, 1));
+  };
+
+  const goToNextMonth = () => {
+    setDate(prevDate => addMonths(prevDate, 1));
+  };
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">{t('workloadCalendar')}</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">{t('workloadCalendar')}</h1>
       
-      <div className="flex items-center justify-between mb-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={format(date, "MMMM yyyy")}
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              <span>{format(date, "MMMM yyyy")}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              defaultMonth={date}
-              selected={date}
-              onSelect={(newDate) => newDate && setDate(newDate)}
-              numberOfMonths={1}
-            />
-          </PopoverContent>
-        </Popover>
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="outline" onClick={goToPreviousMonth}>
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          {t('previous')}
+        </Button>
+        
+        <div className="text-xl font-semibold">
+          {format(date, "MMMM yyyy", { locale: ar })}
+        </div>
+        
+        <Button variant="outline" onClick={goToNextMonth}>
+          {t('next')}
+          <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div>
-          <h2 className="text-lg font-semibold mb-2">{t('overCapacity')}</h2>
-          {overCapacityTasks.map((task) => (
-            <div key={task.id} className="mb-2">
-              <TaskAssignment 
-                value={task.assignee_id || null}
-                onChange={() => {}}
-              />
-              <p>
-                {task.name} ({format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')})
-              </p>
-            </div>
-          ))}
-          {overCapacityTasks.length === 0 && <p>{t('noOverCapacityTasks')}</p>}
-        </div>
+      <div className="grid grid-cols-7 gap-1 mb-6 text-center">
+        <div className="text-sm font-medium">{t('sunday')}</div>
+        <div className="text-sm font-medium">{t('monday')}</div>
+        <div className="text-sm font-medium">{t('tuesday')}</div>
+        <div className="text-sm font-medium">{t('wednesday')}</div>
+        <div className="text-sm font-medium">{t('thursday')}</div>
+        <div className="text-sm font-medium">{t('friday')}</div>
+        <div className="text-sm font-medium">{t('saturday')}</div>
+      </div>
+      
+      <div className="mb-8">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={(newDate) => newDate && setDate(newDate)}
+          disabled={{ before: new Date(2025, 0, 1) }}
+          className="rounded-md border mx-auto"
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="bg-red-50 dark:bg-red-900/20">
+            <CardTitle className="text-lg">{t('overCapacity')}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {overCapacityTasks.length > 0 ? (
+              overCapacityTasks.map((task) => (
+                <div key={task.id} className="mb-4 p-3 border rounded-lg">
+                  <h3 className="font-medium">{task.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    {format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')}
+                  </p>
+                  <TaskAssignment 
+                    value={task.assignee_id}
+                    onChange={() => {}}
+                  />
+                </div>
+              ))
+            ) : (
+              <p className="text-center py-4 text-gray-500">{t('noOverCapacityTasks')}</p>
+            )}
+          </CardContent>
+        </Card>
         
-        <div>
-          <h2 className="text-lg font-semibold mb-2">{t('unassignedTasks')}</h2>
-          {unassignedTasks.map((task) => (
-            <div key={task.id} className="mb-2">
-              <TaskAssignment 
-                value={null}
-                onChange={() => {}}
-              />
-              <p>
-                {task.name} ({format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')})
-              </p>
-            </div>
-          ))}
-          {unassignedTasks.length === 0 && <p>{t('noUnassignedTasks')}</p>}
-        </div>
+        <Card>
+          <CardHeader className="bg-yellow-50 dark:bg-yellow-900/20">
+            <CardTitle className="text-lg">{t('unassignedTasks')}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {unassignedTasks.length > 0 ? (
+              unassignedTasks.map((task) => (
+                <div key={task.id} className="mb-4 p-3 border rounded-lg">
+                  <h3 className="font-medium">{task.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    {format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')}
+                  </p>
+                  <TaskAssignment 
+                    value={null}
+                    onChange={() => {}}
+                  />
+                </div>
+              ))
+            ) : (
+              <p className="text-center py-4 text-gray-500">{t('noUnassignedTasks')}</p>
+            )}
+          </CardContent>
+        </Card>
         
-        <div>
-          <h2 className="text-lg font-semibold mb-2">{t('allTasks')} ({format(date, 'MMM dd')})</h2>
-          {getTasksForDate(date).map(task => (
-            <div key={task.id} className="mb-2">
-              <p>
-                {task.name} ({format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')})
-              </p>
-            </div>
-          ))}
-          {getTasksForDate(date).length === 0 && <p>{t('noTasksForSelectedDate')}</p>}
-        </div>
+        <Card>
+          <CardHeader className="bg-blue-50 dark:bg-blue-900/20">
+            <CardTitle className="text-lg">
+              {t('allTasks')} ({format(date, 'MMM dd')})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {allTasks.length > 0 ? (
+              allTasks.map((task) => (
+                <div key={task.id} className="mb-4 p-3 border rounded-lg">
+                  <h3 className="font-medium">{task.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {format(new Date(task.startDate), 'MMM dd')} - {format(new Date(task.endDate), 'MMM dd')}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center py-4 text-gray-500">{t('noTasksForSelectedDate')}</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -10,7 +10,6 @@ import { useGanttChart, GanttPosition } from '@/hooks/useGanttChart';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TaskFormDialog } from './TaskFormDialog';
 import { GanttTaskBar } from './gantt/GanttTaskBar';
-import { GanttHeaderProps } from './gantt/GanttHeaderProps';
 
 interface GanttChartProps {
   tasks: Task[];
@@ -78,10 +77,14 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
     return null;
   };
 
-  const headerProps: GanttHeaderProps = {
-    startDate,
-    dateRange,
-    cellWidth
+  const handlePreviousPeriod = () => {
+    // Implementation for going to previous period
+    console.log("Navigate to previous period");
+  };
+
+  const handleNextPeriod = () => {
+    // Implementation for going to next period
+    console.log("Navigate to next period");
   };
   
   return (
@@ -121,6 +124,8 @@ export function GanttChart({ tasks, onAddTask, onUpdateTask }: GanttChartProps) 
             startDate={startDate}
             dateRange={dateRange}
             cellWidth={cellWidth}
+            onPreviousPeriod={handlePreviousPeriod}
+            onNextPeriod={handleNextPeriod}
           />
           <GanttGrid 
             tasks={visibleTasks} 
