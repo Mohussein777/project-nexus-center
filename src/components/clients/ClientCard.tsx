@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from '@/contexts/LanguageContext';
 
-interface ClientCardProps {
+export interface ClientCardProps {
   client: Client;
-  onSelect: (clientId: number) => void;
+  onClick: (clientId: number) => void;
+  onEdit?: (client: Client) => void;
+  onDelete?: () => void;
 }
 
-export function ClientCard({ client, onSelect }: ClientCardProps) {
+export function ClientCard({ client, onClick, onEdit, onDelete }: ClientCardProps) {
   const { t } = useLanguage();
   
   // Get status color
@@ -85,7 +87,7 @@ export function ClientCard({ client, onSelect }: ClientCardProps) {
         <Button 
           variant="ghost" 
           className="w-full flex justify-between items-center text-primary"
-          onClick={() => onSelect(client.id)}
+          onClick={() => onClick(client.id)}
         >
           <span>{t('viewDetails')}</span>
           <ChevronRight className="h-4 w-4" />

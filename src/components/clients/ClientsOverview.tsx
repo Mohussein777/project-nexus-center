@@ -47,12 +47,11 @@ export function ClientsOverview() {
   const handleClientAdded = (newClient: Client) => {
     // إضافة العميل الجديد إلى القائمة
     setClients(prevClients => [newClient, ...prevClients]);
-    
-    // عرض رسالة نجاح (تم الانتقال إلى داخل مكون الفورم)
-    
-    // يمكن الانتقال إلى ملف تعريف العميل الجديد إذا كنا نريد ذلك
-    // setSelectedClientId(newClient.id);
-    // setActiveTab('profile');
+  };
+
+  const handleSearch = (query: string, filters: Record<string, string>) => {
+    setSearchQuery(query);
+    // We could implement additional filter logic here
   };
 
   const filteredClients = clients.filter(client => 
@@ -84,6 +83,7 @@ export function ClientsOverview() {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 onClientAdded={handleClientAdded}
+                onSearch={handleSearch}
               />
             )}
           </div>

@@ -51,24 +51,20 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
         title: title,
         completed: false
       })
-      .select();
+      .select('*')
+      .single();
 
     if (error) {
       console.error('Error creating subtask:', error);
       return null;
     }
 
-    if (!data || data.length === 0) {
-      return null;
-    }
-
-    const newSubtask = data[0];
     return {
-      id: String(newSubtask.id),
-      taskId: newSubtask.task_id,
-      title: newSubtask.title,
-      completed: newSubtask.completed,
-      createdAt: newSubtask.created_at
+      id: String(data.id),
+      taskId: data.task_id,
+      title: data.title,
+      completed: data.completed,
+      createdAt: data.created_at
     };
   } catch (err) {
     console.error('Error in createSubtask:', err);
