@@ -13,7 +13,6 @@ import {
 } from './tasks';
 
 export {
-  Task,
   getTasks,
   createTask,
   updateTask,
@@ -22,6 +21,9 @@ export {
   addTaskDependency,
   removeTaskDependency
 };
+
+// Re-export Task interface using 'export type' syntax
+export type { Task } from './tasks';
 
 // Use "export type" to re-export types when isolatedModules is enabled
 export type { TaskCreate, TaskUpdate } from './tasks/types';
