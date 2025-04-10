@@ -81,6 +81,18 @@ export function useProjectTasks() {
   
   const handleUpdateTask = async (updatedTask) => {
     try {
+      // Ensure the task ID is valid
+      if (!updatedTask.id) {
+        console.error('Cannot update task: Missing task ID');
+        toast({
+          title: t('error'),
+          description: t('errorUpdatingTask') + ': Missing task ID',
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log(`Updating task with ID: ${updatedTask.id}`, updatedTask);
       const success = await updateTask(updatedTask.id, updatedTask);
       
       if (success) {
@@ -109,6 +121,11 @@ export function useProjectTasks() {
   
   const handleDeleteTask = async (taskId) => {
     try {
+      if (!taskId) {
+        console.error('Cannot delete task: Missing task ID');
+        return false;
+      }
+
       const success = await deleteTask(taskId);
       
       if (success) {

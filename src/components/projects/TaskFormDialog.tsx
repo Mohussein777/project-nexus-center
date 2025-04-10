@@ -34,8 +34,13 @@ export function TaskFormDialog({
   const handleSubmit = async (taskData: any) => {
     try {
       setIsSubmitting(true);
-      console.log("Submitting task data:", taskData);
-      const result = await onSubmit(taskData);
+      // Ensure the task ID is preserved when editing
+      const dataToSubmit = isEditing && task?.id 
+        ? { ...taskData, id: task.id } 
+        : taskData;
+        
+      console.log("Submitting task data:", dataToSubmit);
+      const result = await onSubmit(dataToSubmit);
       
       if (result) {
         toast({
@@ -67,11 +72,9 @@ export function TaskFormDialog({
           <DialogTitle>
             {isEditing ? t('editTask') : t('addNewTask')}
           </DialogTitle>
-          {!isEditing && (
-            <DialogDescription>
-              {t('addNewTaskDescription')}
-            </DialogDescription>
-          )}
+          <DialogDescription>
+            {!isEditing ? t('addNewTaskDescription') : t('editTaskDescription')}
+          </DialogDescription>
         </DialogHeader>
         <TaskForm 
           task={task} 

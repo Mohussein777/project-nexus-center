@@ -33,9 +33,11 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   const onFormSubmit = async (values) => {
     try {
-      // Map form field names to database column names
+      // Create a new object that includes the task ID if we're updating an existing task
       const formattedValues = {
         ...values,
+        // Include task ID to ensure it's sent with the update request
+        id: task?.id,
         start_date: values.startDate instanceof Date ? values.startDate.toISOString() : values.startDate,
         end_date: values.endDate instanceof Date ? values.endDate.toISOString() : values.endDate,
         assignee_id: assigneeId,
