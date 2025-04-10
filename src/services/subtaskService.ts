@@ -14,12 +14,10 @@ export interface Subtask {
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
-    // Use a raw query to access the subtasks table
+    // We need to use the rpc endpoint to query the subtasks table
+    // since it's not properly defined in the types
     const { data, error } = await supabase
-      .from('subtasks')
-      .select()
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: true });
+      .rpc('get_subtasks_for_task', { task_id_param: taskId });
 
     if (error) {
       console.error('Error fetching subtasks:', error);
@@ -48,14 +46,11 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
 export const createSubtask = async (taskId: string, title: string): Promise<Subtask | null> => {
   try {
     const { data, error } = await supabase
-      .from('subtasks')
-      .insert({
-        task_id: taskId,
-        title: title,
-        completed: false
-      })
-      .select()
-      .single();
+      .rpc('create_subtask', { 
+        task_id_param: taskId,
+        title_param: title,
+        completed_param: false
+      });
 
     if (error) {
       console.error('Error creating subtask:', error);
@@ -78,10 +73,19 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
 // Update a subtask
 export const updateSubtask = async (id: string, updates: { title?: string; completed?: boolean }): Promise<boolean> => {
   try {
+    // Only send parameters that are provided in updates
+    const params: Record<string, any> = { id_param: id };
+    
+    if (updates.title !== undefined) {
+      params.title_param = updates.title;
+    }
+    
+    if (updates.completed !== undefined) {
+      params.completed_param = updates.completed;
+    }
+    
     const { error } = await supabase
-      .from('subtasks')
-      .update(updates)
-      .eq('id', id);
+      .rpc('update_subtask', params);
 
     if (error) {
       console.error('Error updating subtask:', error);
@@ -99,9 +103,7 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
 export const deleteSubtask = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('subtasks')
-      .delete()
-      .eq('id', id);
+      .rpc('delete_subtask', { id_param: id });
 
     if (error) {
       console.error('Error deleting subtask:', error);

@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from 'react';
 import { SatisfactionMetric } from './types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,12 +19,53 @@ import {
   Bar,
   Cell
 } from 'recharts';
+import { getClientSatisfactionMetrics } from '@/services/clients/satisfactionService';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-interface SatisfactionAnalysisProps {
-  metrics: SatisfactionMetric;
-}
+export function SatisfactionAnalysis({ clientId }: { clientId: number }) {
+  const [metrics, setMetrics] = useState<SatisfactionMetric | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const { t } = useLanguage();
 
-export function SatisfactionAnalysis({ metrics }: SatisfactionAnalysisProps) {
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+        const data = await getClientSatisfactionMetrics(clientId);
+        setMetrics(data);
+      } catch (error) {
+        console.error('Error fetching satisfaction metrics:', error);
+        toast({
+          title: t('error'),
+          description: t('errorFetchingMetrics'),
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, [clientId, toast, t]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-lg text-gray-500 dark:text-gray-400">{t('noMetricsAvailable')}</p>
+      </div>
+    );
+  }
+
   const sentimentData = [
     { name: 'Positive', value: metrics.sentimentBreakdown.positive },
     { name: 'Neutral', value: metrics.sentimentBreakdown.neutral },

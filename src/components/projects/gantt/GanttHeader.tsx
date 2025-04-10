@@ -3,8 +3,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { GanttLegend } from './GanttLegend';
+import { GanttHeaderProps } from './GanttHeaderProps';
 
-export function GanttHeader() {
+export function GanttHeader({ startDate, dateRange, cellWidth }: GanttHeaderProps) {
   return (
     <div className="mb-4 flex justify-between">
       <GanttLegend />
