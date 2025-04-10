@@ -9,10 +9,19 @@ export interface Subtask {
   createdAt: string;
 }
 
+// Helper function to convert database row to our frontend model
+const mapDbSubtaskToSubtask = (item: any): Subtask => ({
+  id: String(item.id),
+  taskId: item.task_id,
+  title: item.title,
+  completed: item.completed,
+  createdAt: item.created_at
+});
+
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
-    // Use direct query instead of edge function to avoid CORS issues
+    // Use Supabase API to query 'subtasks' explicitly as a string
     const { data, error } = await supabase
       .from('subtasks')
       .select('*')
@@ -27,13 +36,7 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
       return [];
     }
 
-    return data.map(item => ({
-      id: String(item.id),
-      taskId: item.task_id,
-      title: item.title,
-      completed: item.completed,
-      createdAt: item.created_at
-    }));
+    return data.map(mapDbSubtaskToSubtask);
   } catch (err) {
     console.error('Error in getSubtasks:', err);
     return [];
@@ -43,29 +46,22 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
 // Create a new subtask
 export const createSubtask = async (taskId: string, title: string): Promise<Subtask | null> => {
   try {
-    // Use direct query instead of edge function to avoid CORS issues
+    // Use Supabase API to insert into 'subtasks' explicitly as a string
     const { data, error } = await supabase
       .from('subtasks')
       .insert([{ task_id: taskId, title, completed: false }])
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error('Error creating subtask:', error);
       return null;
     }
 
-    if (!data) {
+    if (!data || data.length === 0) {
       return null;
     }
 
-    return {
-      id: String(data.id),
-      taskId: data.task_id,
-      title: data.title,
-      completed: data.completed,
-      createdAt: data.created_at
-    };
+    return mapDbSubtaskToSubtask(data[0]);
   } catch (err) {
     console.error('Error in createSubtask:', err);
     return null;
@@ -75,7 +71,7 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
 // Update a subtask
 export const updateSubtask = async (id: string, updates: { title?: string; completed?: boolean }): Promise<boolean> => {
   try {
-    // Use direct query instead of edge function to avoid CORS issues
+    // Use Supabase API to update 'subtasks' explicitly as a string
     const { error } = await supabase
       .from('subtasks')
       .update(updates)
@@ -96,7 +92,7 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
 // Delete a subtask
 export const deleteSubtask = async (id: string): Promise<boolean> => {
   try {
-    // Use direct query instead of edge function to avoid CORS issues
+    // Use Supabase API to delete from 'subtasks' explicitly as a string
     const { error } = await supabase
       .from('subtasks')
       .delete()
