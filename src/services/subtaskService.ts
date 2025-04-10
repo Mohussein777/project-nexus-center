@@ -12,9 +12,11 @@ export interface Subtask {
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
-    const { data, error } = await supabase.functions.invoke('get_subtasks_for_task', {
-      body: { taskId }
-    });
+    // Use direct query instead of edge function to avoid CORS issues
+    const { data, error } = await supabase
+      .from('subtasks')
+      .select('*')
+      .eq('task_id', taskId);
 
     if (error) {
       console.error('Error fetching subtasks:', error);
@@ -41,9 +43,12 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
 // Create a new subtask
 export const createSubtask = async (taskId: string, title: string): Promise<Subtask | null> => {
   try {
-    const { data, error } = await supabase.functions.invoke('create_subtask', {
-      body: { taskId, title, completed: false }
-    });
+    // Use direct query instead of edge function to avoid CORS issues
+    const { data, error } = await supabase
+      .from('subtasks')
+      .insert([{ task_id: taskId, title, completed: false }])
+      .select()
+      .single();
 
     if (error) {
       console.error('Error creating subtask:', error);
@@ -70,9 +75,11 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
 // Update a subtask
 export const updateSubtask = async (id: string, updates: { title?: string; completed?: boolean }): Promise<boolean> => {
   try {
-    const { error } = await supabase.functions.invoke('update_subtask', {
-      body: { id, ...updates }
-    });
+    // Use direct query instead of edge function to avoid CORS issues
+    const { error } = await supabase
+      .from('subtasks')
+      .update(updates)
+      .eq('id', id);
 
     if (error) {
       console.error('Error updating subtask:', error);
@@ -89,9 +96,11 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
 // Delete a subtask
 export const deleteSubtask = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase.functions.invoke('delete_subtask', {
-      body: { id }
-    });
+    // Use direct query instead of edge function to avoid CORS issues
+    const { error } = await supabase
+      .from('subtasks')
+      .delete()
+      .eq('id', id);
 
     if (error) {
       console.error('Error deleting subtask:', error);

@@ -56,11 +56,13 @@ export const createTask = async (task: TaskCreate): Promise<Task | null> => {
 };
 
 export const updateTask = async (id: string, task: TaskUpdate): Promise<boolean> => {
-  // Format dates if needed
-  const taskData = {
-    ...formatDateFields(task),
-    updated_at: new Date().toISOString()
-  };
+  // Format dates and ensure we're using database column names
+  const taskData = formatDateFields(task);
+  
+  // Add updated_at field
+  taskData.updated_at = new Date().toISOString();
+  
+  console.log(`Updating task ${id} with data:`, taskData);
 
   const { error } = await supabase
     .from('tasks')

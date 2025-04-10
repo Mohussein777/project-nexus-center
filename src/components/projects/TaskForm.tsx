@@ -33,17 +33,22 @@ export function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
 
   const onFormSubmit = async (values) => {
     try {
-      console.log("Form submission values:", {
+      // Map form field names to database column names
+      const formattedValues = {
         ...values,
+        start_date: values.startDate instanceof Date ? values.startDate.toISOString() : values.startDate,
+        end_date: values.endDate instanceof Date ? values.endDate.toISOString() : values.endDate,
         assignee_id: assigneeId,
         project_id: Number(projectId),
-      });
+      };
       
-      await onSubmit({
-        ...values,
-        assignee_id: assigneeId,
-        project_id: Number(projectId),
-      });
+      // Remove frontend field names that don't match database columns
+      delete formattedValues.startDate;
+      delete formattedValues.endDate;
+      
+      console.log("Form submission values:", formattedValues);
+      
+      await onSubmit(formattedValues);
     } catch (error) {
       console.error("Error submitting form:", error);
     }

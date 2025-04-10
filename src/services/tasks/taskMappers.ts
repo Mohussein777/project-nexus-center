@@ -20,9 +20,33 @@ export const mapDbTaskToTask = (dbTask: any): Task => {
 };
 
 export const formatDateFields = (task: any): any => {
-  return {
-    ...task,
-    start_date: task.start_date instanceof Date ? task.start_date.toISOString() : task.start_date,
-    end_date: task.end_date instanceof Date ? task.end_date.toISOString() : task.end_date
-  };
+  // Create a new object for the formatted task data
+  const formattedTask = { ...task };
+  
+  // If startDate is provided in the task object, map it to start_date
+  if (task.startDate !== undefined) {
+    formattedTask.start_date = task.startDate instanceof Date 
+      ? task.startDate.toISOString() 
+      : task.startDate;
+    delete formattedTask.startDate;
+  }
+  
+  // If endDate is provided in the task object, map it to end_date
+  if (task.endDate !== undefined) {
+    formattedTask.end_date = task.endDate instanceof Date 
+      ? task.endDate.toISOString() 
+      : task.endDate;
+    delete formattedTask.endDate;
+  }
+  
+  // Handle the case when start_date and end_date are directly provided
+  if (task.start_date instanceof Date) {
+    formattedTask.start_date = task.start_date.toISOString();
+  }
+  
+  if (task.end_date instanceof Date) {
+    formattedTask.end_date = task.end_date.toISOString();
+  }
+  
+  return formattedTask;
 };
