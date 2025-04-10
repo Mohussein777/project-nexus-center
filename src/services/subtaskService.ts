@@ -12,9 +12,17 @@ export interface Subtask {
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
-    // Use the RPC function to get subtasks
+    // Manually specify the type of the expected response to work around TypeScript issues
+    type SubtaskResponse = {
+      id: string;
+      task_id: string;
+      title: string;
+      completed: boolean;
+      created_at: string;
+    }[];
+
     const { data, error } = await supabase
-      .rpc('get_subtasks_for_task', { task_id_param: taskId });
+      .rpc('get_subtasks_for_task', { task_id_param: taskId }) as { data: SubtaskResponse | null, error: any };
 
     if (error) {
       console.error('Error fetching subtasks:', error);
@@ -26,7 +34,7 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
       return [];
     }
 
-    return data.map((item: any) => ({
+    return data.map(item => ({
       id: String(item.id),
       taskId: item.task_id,
       title: item.title,
@@ -42,12 +50,21 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
 // Create a new subtask
 export const createSubtask = async (taskId: string, title: string): Promise<Subtask | null> => {
   try {
+    // Manually specify the type of the expected response
+    type SubtaskResponse = {
+      id: string;
+      task_id: string;
+      title: string;
+      completed: boolean;
+      created_at: string;
+    };
+
     const { data, error } = await supabase
       .rpc('create_subtask', { 
         task_id_param: taskId,
         title_param: title,
         completed_param: false
-      });
+      }) as { data: SubtaskResponse | null, error: any };
 
     if (error) {
       console.error('Error creating subtask:', error);
@@ -86,7 +103,7 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
     }
     
     const { error } = await supabase
-      .rpc('update_subtask', params);
+      .rpc('update_subtask', params) as { data: any, error: any };
 
     if (error) {
       console.error('Error updating subtask:', error);
@@ -104,7 +121,7 @@ export const updateSubtask = async (id: string, updates: { title?: string; compl
 export const deleteSubtask = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .rpc('delete_subtask', { id_param: id });
+      .rpc('delete_subtask', { id_param: id }) as { data: any, error: any };
 
     if (error) {
       console.error('Error deleting subtask:', error);
