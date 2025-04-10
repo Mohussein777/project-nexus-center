@@ -9,13 +9,10 @@ export interface Subtask {
   createdAt: string;
 }
 
-// Since the subtasks table is not properly defined in the Database types,
-// we need to use a more generic approach to access it
 // Get subtasks for a task
 export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
   try {
-    // We need to use the rpc endpoint to query the subtasks table
-    // since it's not properly defined in the types
+    // Use the RPC function to get subtasks
     const { data, error } = await supabase
       .rpc('get_subtasks_for_task', { task_id_param: taskId });
 
@@ -25,11 +22,11 @@ export const getSubtasks = async (taskId: string): Promise<Subtask[]> => {
     }
 
     // Return empty array if no data
-    if (!data || data.length === 0) {
+    if (!data) {
       return [];
     }
 
-    return data.map(item => ({
+    return data.map((item: any) => ({
       id: String(item.id),
       taskId: item.task_id,
       title: item.title,
@@ -54,6 +51,10 @@ export const createSubtask = async (taskId: string, title: string): Promise<Subt
 
     if (error) {
       console.error('Error creating subtask:', error);
+      return null;
+    }
+
+    if (!data) {
       return null;
     }
 
