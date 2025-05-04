@@ -1,12 +1,10 @@
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FilterControls } from './FilterControls';
-import { AttendanceStatsCards } from './StatsCards';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttendanceTable } from './AttendanceTable';
+import { StatsCards } from './StatsCards';
+import { FilterControls } from './FilterControls';
 import { Employee, TimeEntry } from '../types';
-import { useToast } from "@/hooks/use-toast";
-import { formatTimeSpent } from './attendanceUtils';
 
 interface AllEmployeesAttendanceProps {
   employees: Employee[];
@@ -16,100 +14,50 @@ interface AllEmployeesAttendanceProps {
   loading: boolean;
 }
 
-export function AllEmployeesAttendance({ 
-  employees, 
-  timeEntries, 
-  selectedDate, 
+export function AllEmployeesAttendance({
+  employees,
+  timeEntries,
+  selectedDate,
   onDateChange,
-  loading 
+  loading
 }: AllEmployeesAttendanceProps) {
-  const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
-  const { toast } = useToast();
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
   
-  // Get unique departments for filtering
-  const departments = [...new Set(employees.map(employee => employee.department))];
+  // Get unique departments from employees
+  const departments = [...new Set(employees.map(emp => emp.department))];
   
-  // Process data for display
-  useEffect(() => {
-    if (loading) return;
-    
-    // In a real app, this data would come from the server based on filters
-    const data = employees.map(employee => {
-      // Filter by department if specified
-      if (selectedDepartment !== 'all' && employee.department !== selectedDepartment) {
-        return null;
-      }
-      
-      // Find time entries for this employee on the selected date
-      const todayEntries = timeEntries.filter(
-        entry => entry.employeeId === employee.id && entry.date === selectedDate
-      );
-      
-      // Calculate total work time
-      const totalWorkTime = todayEntries.reduce((total, entry) => {
-        return total + (entry.duration || 0);
-      }, 0);
-      
-      // Get first entry of the day (clock in)
-      const firstEntry = todayEntries.sort((a, b) => 
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-      )[0];
-      
-      // Get last entry of the day (clock out)
-      const lastEntry = todayEntries.sort((a, b) => 
-        new Date(b.endTime || b.startTime).getTime() - new Date(a.endTime || a.startTime).getTime()
-      )[0];
-      
-      // Determine attendance status
-      let status = 'غائب';
-      if (todayEntries.length > 0) {
-        status = todayEntries.some(entry => entry.status === 'active') ? 'يعمل حاليًا' : 'حاضر';
-      } else if (employee.status === 'On Leave') {
-        status = 'في إجازة';
-      }
-      
-      return {
-        id: employee.id,
-        name: employee.name,
-        avatar: employee.avatar,
-        color: employee.color,
-        position: employee.position,
-        department: employee.department,
-        clockIn: firstEntry ? new Date(firstEntry.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
-        clockOut: lastEntry && lastEntry.endTime ? new Date(lastEntry.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
-        totalTime: formatTimeSpent(totalWorkTime),
-        status,
-        active: todayEntries.some(entry => entry.status === 'active'),
-        entries: todayEntries.length
-      };
-    }).filter(Boolean); // Remove null entries
-    
-    setAttendanceData(data);
-  }, [employees, timeEntries, selectedDate, selectedDepartment, loading]);
-
+  // Filter employees based on selected department
+  const filteredEmployees = selectedDepartment === "all"
+    ? employees
+    : employees.filter(emp => emp.department === selectedDepartment);
+  
+  // Group time entries by employee ID for quicker lookup
+  const timeEntriesByEmployee = timeEntries.reduce((acc, entry) => {
+    const employeeId = entry.employeeId.toString(); // Convert to string for consistent comparison
+    if (!acc[employeeId]) {
+      acc[employeeId] = [];
+    }
+    acc[employeeId].push(entry);
+    return acc;
+  }, {} as Record<string, TimeEntry[]>);
+  
   // Calculate statistics
-  const presentCount = attendanceData.filter(employee => 
-    employee.status === 'حاضر' || employee.status === 'يعمل حاليًا'
-  ).length;
+  const totalEmployees = filteredEmployees.length;
+  const presentToday = new Set(
+    timeEntries
+      .filter(entry => entry.date === selectedDate)
+      .map(entry => entry.employeeId.toString())
+  ).size;
   
-  const absentCount = attendanceData.filter(employee => 
-    employee.status === 'غائب'
-  ).length;
+  const absentToday = totalEmployees - presentToday;
+  const attendanceRate = totalEmployees > 0 
+    ? Math.round((presentToday / totalEmployees) * 100) 
+    : 0;
   
-  const leaveCount = attendanceData.filter(employee => 
-    employee.status === 'في إجازة'
-  ).length;
-  
-  const activeCount = attendanceData.filter(employee => 
-    employee.active
-  ).length;
-
   return (
-    <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-        <div></div> {/* Empty div to push the filter controls to the right */}
-        <FilterControls 
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <FilterControls
           selectedDate={selectedDate}
           onDateChange={onDateChange}
           selectedDepartment={selectedDepartment}
@@ -118,24 +66,33 @@ export function AllEmployeesAttendance({
         />
       </div>
       
-      <AttendanceStatsCards 
-        presentCount={presentCount} 
-        absentCount={absentCount} 
-        leaveCount={leaveCount} 
-        activeCount={activeCount} 
+      <StatsCards
+        totalEmployees={totalEmployees}
+        presentToday={presentToday}
+        absentToday={absentToday}
+        attendanceRate={attendanceRate}
       />
       
-      <Card className="mt-6">
+      <Card>
         <CardHeader>
-          <CardTitle>سجل الحضور</CardTitle>
-          <CardDescription>
-            سجل الحضور والانصراف ليوم {formatTimeSpent(selectedDate)}
-          </CardDescription>
+          <CardTitle>سجل الحضور والانصراف</CardTitle>
         </CardHeader>
         <CardContent>
-          <AttendanceTable loading={loading} attendanceData={attendanceData} />
+          {loading ? (
+            <div className="animate-pulse space-y-4">
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          ) : (
+            <AttendanceTable 
+              employees={filteredEmployees} 
+              timeEntriesByEmployee={timeEntriesByEmployee}
+              selectedDate={selectedDate}
+            />
+          )}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
