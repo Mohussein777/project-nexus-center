@@ -60,7 +60,23 @@ export function AttendanceManagement() {
         }
         
         if (data) {
-          setCurrentUserEmployee(data as Employee);
+          // Convert the Supabase data to our Employee type
+          const employeeData: Employee = {
+            id: Number(data.id),
+            name: data.name,
+            position: data.position, 
+            email: data.email,
+            phone: data.phone || '',
+            department: data.department,
+            joinDate: data.join_date,
+            status: data.status as 'Active' | 'On Leave' | 'Inactive',
+            avatar: data.name.split(' ').map((n: string) => n[0]).join(''),
+            color: 'from-blue-500 to-cyan-500', // Default color
+            projects: 0,
+            employeeId: data.employee_id || '',
+            manager: data.manager || ''
+          };
+          setCurrentUserEmployee(employeeData);
         }
       } catch (error) {
         console.error('Error in fetchCurrentUserEmployee:', error);
@@ -104,14 +120,28 @@ export function AttendanceManagement() {
         const { data, error } = await supabase
           .from('time_entries')
           .select('*')
-          .eq('employee_id', currentUserEmployee.id)
+          .eq('employee_id', currentUserEmployee.id.toString())
           .order('date', { ascending: false })
           .order('start_time', { ascending: false })
           .limit(20);
           
         if (error) throw error;
         
-        setCurrentUserTimeEntries(data as TimeEntry[]);
+        // Convert the Supabase data to our TimeEntry type
+        const timeEntriesData = data.map(entry => ({
+          id: Number(entry.id),
+          employeeId: Number(entry.employee_id),
+          projectId: entry.project_id,
+          taskId: entry.task_id || null,
+          startTime: entry.start_time,
+          endTime: entry.end_time || null,
+          duration: entry.duration || null,
+          description: entry.description || '',
+          date: entry.date,
+          status: entry.status as 'active' | 'completed'
+        }));
+        
+        setCurrentUserTimeEntries(timeEntriesData);
       } catch (error) {
         console.error('Error fetching user time entries:', error);
       }
@@ -211,14 +241,28 @@ export function AttendanceManagement() {
         const { data, error } = await supabase
           .from('time_entries')
           .select('*')
-          .eq('employee_id', currentUserEmployee.id)
+          .eq('employee_id', currentUserEmployee.id.toString())
           .order('date', { ascending: false })
           .order('start_time', { ascending: false })
           .limit(20);
           
         if (error) throw error;
         
-        setCurrentUserTimeEntries(data as TimeEntry[]);
+        // Convert the Supabase data to our TimeEntry type
+        const timeEntriesData = data.map(entry => ({
+          id: Number(entry.id),
+          employeeId: Number(entry.employee_id),
+          projectId: entry.project_id,
+          taskId: entry.task_id || null,
+          startTime: entry.start_time,
+          endTime: entry.end_time || null,
+          duration: entry.duration || null,
+          description: entry.description || '',
+          date: entry.date,
+          status: entry.status as 'active' | 'completed'
+        }));
+        
+        setCurrentUserTimeEntries(timeEntriesData);
       }
     } catch (error) {
       console.error('Error refreshing attendance data:', error);
@@ -447,7 +491,7 @@ export function AttendanceManagement() {
             <div className="md:col-span-1">
               {currentUserEmployee ? (
                 <TimeTrackingWidget 
-                  employeeId={currentUserEmployee.id} 
+                  employeeId={currentUserEmployee.id.toString()} 
                   onTimeEntryUpdate={handleTimeEntryUpdate}
                 />
               ) : (

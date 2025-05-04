@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, Stop, Clock, Timer } from 'lucide-react';
+import { Play, Square, Clock, Timer } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -207,7 +207,7 @@ export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTracki
                 onClick={handleStopTracking}
                 disabled={!isTracking}
               >
-                <Stop className="mr-2 h-5 w-5" />
+                <Square className="mr-2 h-5 w-5" />
                 تسجيل انصراف
               </Button>
             ) : (
