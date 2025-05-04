@@ -199,13 +199,14 @@ export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTracki
             {formatElapsedTime(elapsedTime)}
           </div>
           
-          <div>
+          <div className="w-full">
             {isTracking ? (
               <Button 
                 variant="destructive" 
-                size="lg" 
+                size="lg"
                 onClick={handleStopTracking}
                 disabled={!isTracking}
+                className="w-full"
               >
                 <Square className="mr-2 h-5 w-5" />
                 تسجيل انصراف
@@ -215,7 +216,7 @@ export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTracki
                 variant="default" 
                 size="lg" 
                 onClick={handleStartTracking}
-                className="bg-green-600 hover:bg-green-700"
+                className="w-full bg-green-600 hover:bg-green-700"
               >
                 <Play className="mr-2 h-5 w-5" />
                 تسجيل حضور

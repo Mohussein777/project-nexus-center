@@ -18,7 +18,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className={`flex min-h-screen bg-background ${language === 'ar' ? 'rtl' : 'ltr'}`}>
-      <Sidebar collapsed={sidebarCollapsed} isRtl={language === 'ar'} />
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 flex-shrink-0`}>
+        <Sidebar collapsed={sidebarCollapsed} isRtl={language === 'ar'} />
+      </div>
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar 
           onToggleSidebar={toggleSidebar} 
