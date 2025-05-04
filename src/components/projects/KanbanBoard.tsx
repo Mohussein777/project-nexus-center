@@ -102,11 +102,11 @@ export function KanbanBoard({ tasks, onUpdateTask }: KanbanBoardProps) {
     setIsEditDialogOpen(true);
   };
   
-  const handleUpdateTask = async (updatedTask: Task) => {
-    const result = await onUpdateTask(updatedTask);
+  // تعديل نوع البيانات لتصحيح الخطأ - معالج تحديث المهمة
+  const handleUpdateTask = async (updatedTask: Task): Promise<void> => {
+    await onUpdateTask(updatedTask);
     setIsEditDialogOpen(false);
     setSelectedTask(null);
-    return result;
   };
   
   return (

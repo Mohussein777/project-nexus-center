@@ -72,6 +72,7 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
         isDragging ? "opacity-50 z-10 shadow-lg" : "opacity-100",
         isOverdue() && "border-red-300 dark:border-red-700"
       )}
+      {...attributes}
     >
       {isOverdue() && (
         <div className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-md">
@@ -81,7 +82,6 @@ export function KanbanTask({ id, task, onEdit }: KanbanTaskProps) {
       
       <div 
         className="absolute top-2 left-2 text-gray-400 cursor-grab active:cursor-grabbing" 
-        {...attributes} 
         {...listeners}
       >
         <GripVertical className="h-4 w-4" />
