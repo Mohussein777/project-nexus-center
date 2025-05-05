@@ -5,28 +5,22 @@ import {
   TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-
-interface AttendanceEntry {
-  id: number;
-  name: string;
-  avatar: string;
-  color: string;
-  position: string;
-  department: string;
-  clockIn: string;
-  clockOut: string;
-  totalTime: string;
-  status: string;
-  active: boolean;
-  entries: number;
-}
+import { Employee, TimeEntry } from '../types';
+import { formatTimeSpent } from '@/services/employeeService';
 
 interface AttendanceTableProps {
-  loading: boolean;
-  attendanceData: AttendanceEntry[];
+  employees: Employee[];
+  timeEntriesByEmployee: Record<string, TimeEntry[]>;
+  selectedDate: string;
+  loading?: boolean;
 }
 
-export function AttendanceTable({ loading, attendanceData }: AttendanceTableProps) {
+export function AttendanceTable({ 
+  loading, 
+  employees,
+  timeEntriesByEmployee,
+  selectedDate
+}: AttendanceTableProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-12">
@@ -34,6 +28,54 @@ export function AttendanceTable({ loading, attendanceData }: AttendanceTableProp
       </div>
     );
   }
+
+  // Process employees and time entries to display in the table
+  const attendanceData = employees.map(employee => {
+    const employeeId = employee.id.toString();
+    const entries = timeEntriesByEmployee[employeeId] || [];
+    
+    // Filter entries for the selected date
+    const todayEntries = entries.filter(entry => entry.date === selectedDate);
+    
+    // Get the first entry for the day (clock in)
+    const firstEntry = todayEntries.length > 0 ? 
+      todayEntries.reduce((earliest, entry) => {
+        return new Date(entry.startTime) < new Date(earliest.startTime) ? entry : earliest;
+      }, todayEntries[0]) : null;
+    
+    // Calculate if the employee is currently active
+    const activeEntry = todayEntries.find(entry => entry.status === 'active');
+    const isActive = !!activeEntry;
+    
+    // Calculate total time for today
+    const totalSeconds = todayEntries.reduce((total, entry) => {
+      return total + (entry.duration || 0);
+    }, 0);
+    
+    // Determine status
+    let status = 'غائب';
+    if (isActive) {
+      status = 'يعمل حاليًا';
+    } else if (todayEntries.length > 0) {
+      status = 'حاضر';
+    }
+    
+    return {
+      id: employee.id,
+      name: employee.name,
+      avatar: employee.avatar || employee.name.split(' ').map(n => n[0]).join(''),
+      color: employee.color,
+      position: employee.position,
+      department: employee.department,
+      clockIn: firstEntry ? new Date(firstEntry.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+      clockOut: isActive ? '-' : todayEntries.length > 0 ? 
+        new Date(todayEntries[todayEntries.length - 1].endTime || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+      totalTime: formatTimeSpent(totalSeconds),
+      status,
+      active: isActive,
+      entries: todayEntries.length
+    };
+  });
 
   return (
     <Table>

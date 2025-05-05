@@ -8,9 +8,20 @@ import { formatDateInArabic, formatTimeSpent } from './attendanceUtils';
 
 interface PersonalTimeEntriesProps {
   timeEntries: TimeEntry[];
+  loading?: boolean;
 }
 
-export function PersonalTimeEntries({ timeEntries }: PersonalTimeEntriesProps) {
+export function PersonalTimeEntries({ timeEntries, loading }: PersonalTimeEntriesProps) {
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      </div>
+    );
+  }
+  
   if (timeEntries.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
