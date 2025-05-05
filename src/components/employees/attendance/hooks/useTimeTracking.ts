@@ -15,6 +15,13 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   useEffect(() => {
     const checkActiveTimeEntry = async () => {
       try {
+        if (!employeeId) {
+          console.log("No employee ID provided");
+          setLoading(false);
+          return;
+        }
+
+        console.log("Checking active time entry for employee:", employeeId);
         const { data, error } = await supabase
           .from('time_entries')
           .select('*')
@@ -23,8 +30,12 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
           .order('start_time', { ascending: false })
           .limit(1);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error checking active time entry:", error);
+          throw error;
+        }
           
+        console.log("Active time entry data:", data);
         if (data && data.length > 0) {
           const entry = data[0];
           setCurrentEntry(entry);
@@ -47,7 +58,11 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
       }
     };
     
-    checkActiveTimeEntry();
+    if (employeeId) {
+      checkActiveTimeEntry();
+    } else {
+      setLoading(false);
+    }
   }, [employeeId, toast]);
   
   // Update elapsed time counter every second if tracking is active
@@ -67,6 +82,17 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   
   const handleStartTracking = async () => {
     try {
+      if (!employeeId) {
+        console.error("Cannot start tracking: No employee ID provided");
+        toast({
+          title: "خطأ",
+          description: "لا يمكن بدء التتبع، معرف الموظف غير متوفر",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Starting time tracking for employee:", employeeId);
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       
@@ -80,8 +106,12 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
         }])
         .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error inserting time entry:", error);
+        throw error;
+      }
       
+      console.log("Successfully created time entry:", data);
       setCurrentEntry(data[0]);
       setIsTracking(true);
       setElapsedTime(0);
@@ -104,9 +134,13 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   };
   
   const handleStopTracking = async () => {
-    if (!currentEntry) return;
+    if (!currentEntry) {
+      console.error("Cannot stop tracking: No active entry found");
+      return;
+    }
     
     try {
+      console.log("Stopping time tracking for entry:", currentEntry.id);
       const now = new Date();
       const startTime = new Date(currentEntry.start_time).getTime();
       const endTime = now.getTime();
@@ -121,8 +155,12 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
         })
         .eq('id', currentEntry.id);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating time entry:", error);
+        throw error;
+      }
       
+      console.log("Successfully completed time entry");
       setIsTracking(false);
       setCurrentEntry(null);
       

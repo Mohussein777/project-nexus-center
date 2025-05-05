@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttendanceTable } from './AttendanceTable';
-import { StatsCards } from './StatsCards';
+import { StatsCards as AttendanceStatsCards } from './StatsCards';
 import { FilterControls } from './FilterControls';
 import { Employee, TimeEntry } from '../types';
 
@@ -66,7 +66,7 @@ export function AllEmployeesAttendance({
         />
       </div>
       
-      <StatsCards
+      <AttendanceStatsCards
         totalEmployees={totalEmployees}
         presentToday={presentToday}
         absentToday={absentToday}
