@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
+import { TimerButton } from '../employees/attendance/TimerButton';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -100,6 +101,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
       </div>
       
       <div className="flex items-center space-x-3">
+        {/* Timer Button */}
+        <TimerButton />
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="text-muted-foreground">

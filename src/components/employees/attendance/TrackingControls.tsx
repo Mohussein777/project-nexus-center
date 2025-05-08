@@ -20,7 +20,7 @@ export function TrackingControls({ isTracking, onStart, onStop, projectSelected 
           className="w-full"
         >
           <Square className="mr-2 h-5 w-5" />
-          تسجيل انصراف
+          إيقاف التسجيل
         </Button>
       ) : (
         <Button 
@@ -31,7 +31,7 @@ export function TrackingControls({ isTracking, onStart, onStop, projectSelected 
           className="w-full bg-green-600 hover:bg-green-700"
         >
           <Play className="mr-2 h-5 w-5" />
-          تسجيل حضور
+          بدء التسجيل
         </Button>
       )}
       
