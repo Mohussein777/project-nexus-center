@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { formatTimeSpent } from '@/services/employeeService';
+import { formatTimeSpent } from '@/services/timeTrackingService';
+import { formatElapsedTime } from '@/utils/timeFormatUtils';
 
 export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => void) {
   const [isTracking, setIsTracking] = useState(false);
@@ -190,19 +191,6 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
         variant: "destructive",
       });
     }
-  };
-
-  // Format elapsed time for display (HH:MM:SS)
-  const formatElapsedTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    return [
-      hrs.toString().padStart(2, '0'),
-      mins.toString().padStart(2, '0'),
-      secs.toString().padStart(2, '0')
-    ].join(':');
   };
   
   return {
