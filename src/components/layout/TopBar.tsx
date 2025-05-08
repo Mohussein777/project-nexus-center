@@ -101,8 +101,10 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
       </div>
       
       <div className="flex items-center space-x-3">
-        {/* Timer Button */}
-        <TimerButton />
+        {/* Timer Button - Make sure this is rendered properly */}
+        {user && (
+          <TimerButton />
+        )}
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

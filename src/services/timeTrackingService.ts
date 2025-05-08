@@ -1,8 +1,16 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TimeEntry } from "@/components/employees/types";
 
 // Get the current active time entry for an employee
 export const getCurrentTimeEntry = async (employeeId: string) => {
+  if (!employeeId) {
+    console.log("No employee ID provided to getCurrentTimeEntry");
+    return { data: null, error: new Error("No employee ID provided") };
+  }
+  
+  console.log(`Fetching current time entry for employee ${employeeId}`);
+  
   const { data, error } = await supabase
     .from('time_entries')
     .select('*')
@@ -17,10 +25,13 @@ export const getCurrentTimeEntry = async (employeeId: string) => {
   }
   
   if (!data || data.length === 0) {
+    console.log(`No active time entry found for employee ${employeeId}`);
     return { data: null, error: null };
   }
   
   const entry = data[0];
+  console.log(`Found active time entry for employee ${employeeId}:`, entry);
+  
   return { 
     data: {
       id: Number(entry.id),
@@ -44,74 +55,97 @@ export const startTimeTracking = async (entry: {
   task_id?: string;
   description?: string;
 }): Promise<TimeEntry | null> => {
+  if (!entry.employee_id || !entry.project_id) {
+    console.error("Employee ID or Project ID missing for startTimeTracking");
+    return null;
+  }
+  
+  console.log(`Starting time tracking for employee ${entry.employee_id} on project ${entry.project_id}`);
+  
   const now = new Date();
   const today = now.toISOString().split('T')[0];
 
-  const { data, error } = await supabase
-    .from('time_entries')
-    .insert({
-      employee_id: entry.employee_id,
-      project_id: entry.project_id,
-      task_id: entry.task_id,
-      description: entry.description,
-      start_time: now.toISOString(),
-      date: today,
-      status: 'active'
-    })
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('time_entries')
+      .insert({
+        employee_id: entry.employee_id,
+        project_id: entry.project_id,
+        task_id: entry.task_id,
+        description: entry.description,
+        start_time: now.toISOString(),
+        date: today,
+        status: 'active'
+      })
+      .select()
+      .single();
 
-  if (error) {
-    console.error('Error starting time tracking:', error);
+    if (error) {
+      console.error('Error starting time tracking:', error);
+      return null;
+    }
+
+    console.log('Time tracking started successfully:', data);
+    
+    return {
+      id: Number(data.id),
+      employeeId: Number(data.employee_id),
+      projectId: data.project_id,
+      taskId: data.task_id || null,
+      startTime: data.start_time,
+      endTime: null,
+      duration: null,
+      description: data.description || '',
+      date: data.date,
+      status: 'active'
+    };
+  } catch (error) {
+    console.error('Exception in startTimeTracking:', error);
     return null;
   }
-
-  return {
-    id: Number(data.id), // Convert string ID to number for frontend compatibility
-    employeeId: Number(data.employee_id),
-    projectId: data.project_id,
-    taskId: data.task_id || null, // Task ID is a string (UUID) from Supabase
-    startTime: data.start_time,
-    endTime: null,
-    duration: null,
-    description: data.description || '',
-    date: data.date,
-    status: 'active'
-  };
 };
 
-export const stopTimeTracking = async (entryId: string): Promise<boolean> => {
+export const stopTimeTracking = async (entryId: string | number): Promise<boolean> => {
+  const entryIdStr = entryId.toString();
+  console.log(`Stopping time tracking for entry ${entryIdStr}`);
+  
   // Get the existing entry to calculate duration
-  const { data: existingEntry } = await supabase
-    .from('time_entries')
-    .select('*')
-    .eq('id', entryId)
-    .single();
+  try {
+    const { data: existingEntry } = await supabase
+      .from('time_entries')
+      .select('*')
+      .eq('id', entryIdStr)
+      .single();
 
-  if (!existingEntry || !existingEntry.start_time) {
-    console.error(`Time entry ${entryId} not found or invalid`);
+    if (!existingEntry || !existingEntry.start_time) {
+      console.error(`Time entry ${entryIdStr} not found or invalid`);
+      return false;
+    }
+
+    const now = new Date();
+    const startTime = new Date(existingEntry.start_time);
+    const durationSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+
+    const { error } = await supabase
+      .from('time_entries')
+      .update({
+        end_time: now.toISOString(),
+        duration: durationSeconds,
+        status: 'completed'
+      })
+      .eq('id', entryIdStr);
+
+    if (error) {
+      console.error(`Error stopping time entry ${entryIdStr}:`, error);
+      return false;
+    }
+
+    console.log(`Time entry ${entryIdStr} stopped successfully`);
+    return true;
+  } catch (error) {
+    console.error(`Exception in stopTimeTracking for entry ${entryIdStr}:`, error);
     return false;
   }
-
-  const now = new Date();
-  const startTime = new Date(existingEntry.start_time);
-  const durationSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-
-  const { error } = await supabase
-    .from('time_entries')
-    .update({
-      end_time: now.toISOString(),
-      duration: durationSeconds,
-      status: 'completed'
-    })
-    .eq('id', entryId);
-
-  if (error) {
-    console.error(`Error stopping time entry ${entryId}:`, error);
-    return false;
-  }
-
-  return true;
 };
 
 // Format time in seconds to HH:MM format

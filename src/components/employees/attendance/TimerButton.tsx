@@ -24,11 +24,16 @@ export function TimerButton() {
     async function getEmployeeId() {
       if (user?.email) {
         setIsLoading(true);
-        const employee = await fetchCurrentUserEmployee(user.email);
-        if (employee) {
-          setEmployeeId(employee.id.toString());
+        try {
+          const employee = await fetchCurrentUserEmployee(user.email);
+          if (employee) {
+            setEmployeeId(employee.id.toString());
+          }
+        } catch (error) {
+          console.error("Error fetching employee ID:", error);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     }
     
@@ -42,10 +47,13 @@ export function TimerButton() {
     handleStartTracking,
     handleStopTracking,
     loading: trackingLoading
-  } = useTimeTracking(employeeId || "", () => {});
+  } = useTimeTracking(employeeId || "", () => {
+    // Callback after time entry update
+    console.log("Time entry updated");
+  });
   
   const onStart = () => {
-    if (selectedProjectId) {
+    if (selectedProjectId && employeeId) {
       handleStartTracking(selectedProjectId);
       setIsPopoverOpen(false);
     }

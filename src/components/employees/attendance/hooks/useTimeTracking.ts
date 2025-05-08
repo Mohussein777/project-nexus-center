@@ -1,9 +1,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { formatTimeSpent, getCurrentTimeEntry, startTimeTracking, stopTimeTracking } from '@/services/timeTrackingService';
 import { formatElapsedTime } from '@/utils/timeFormatUtils';
+import { 
+  getCurrentTimeEntry, 
+  startTimeTracking, 
+  stopTimeTracking 
+} from '@/services/timeTrackingService';
 
 export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => void) {
   const [isTracking, setIsTracking] = useState(false);
@@ -12,7 +15,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
-  // Check active time entry when component loads
+  // Initialize time tracking by checking for active time entries
   const initializeTimeEntry = useCallback(async () => {
     try {
       if (!employeeId) {
@@ -54,6 +57,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   // Initialize time entry on component mount
   useEffect(() => {
     if (employeeId) {
+      console.log("Initializing time entry for employee:", employeeId);
       initializeTimeEntry();
     } else {
       setLoading(false);
@@ -68,13 +72,19 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
       timer = setInterval(() => {
         setElapsedTime(prev => prev + 1);
       }, 1000);
+      
+      console.log("Time tracking timer started");
     }
     
     return () => {
-      if (timer) clearInterval(timer);
+      if (timer) {
+        clearInterval(timer);
+        console.log("Time tracking timer cleared");
+      }
     };
   }, [isTracking]);
   
+  // Handle start tracking function
   const handleStartTracking = async (projectId: number) => {
     try {
       if (!employeeId) {
@@ -131,6 +141,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
     }
   };
   
+  // Handle stop tracking function
   const handleStopTracking = async () => {
     if (!currentEntry) {
       console.error("Cannot stop tracking: No active entry found");
@@ -144,7 +155,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
       const endTime = now.getTime();
       const duration = Math.floor((endTime - startTime) / 1000); // in seconds
       
-      const success = await stopTimeTracking(currentEntry.id.toString());
+      const success = await stopTimeTracking(currentEntry.id);
         
       if (!success) {
         throw new Error("Failed to update time entry");
@@ -156,7 +167,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
       
       toast({
         title: "تم تسجيل الانصراف",
-        description: `انتهى تسجيل الوقت. المدة: ${formatTimeSpent(duration)}`,
+        description: `انتهى تسجيل الوقت. المدة: ${formatElapsedTime(duration)}`,
       });
       
       onTimeEntryUpdate(); // Update parent component data
