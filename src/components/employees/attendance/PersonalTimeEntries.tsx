@@ -5,13 +5,52 @@ import {
 } from "@/components/ui/table";
 import { TimeEntry } from '../types';
 import { formatDateInArabic, formatTimeSpent } from './attendanceUtils';
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
 interface PersonalTimeEntriesProps {
   timeEntries: TimeEntry[];
   loading?: boolean;
 }
 
+interface ProjectInfo {
+  [key: number]: string;
+}
+
 export function PersonalTimeEntries({ timeEntries, loading }: PersonalTimeEntriesProps) {
+  const [projectsInfo, setProjectsInfo] = useState<ProjectInfo>({});
+
+  // Fetch projects info
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        const projectIds = [...new Set(timeEntries.map(entry => entry.projectId).filter(Boolean))];
+        
+        if (projectIds.length === 0) return;
+
+        const { data, error } = await supabase
+          .from('projects')
+          .select('id, name')
+          .in('id', projectIds);
+
+        if (error) throw error;
+
+        const projectsMap: ProjectInfo = {};
+        (data || []).forEach(project => {
+          projectsMap[project.id] = project.name;
+        });
+
+        setProjectsInfo(projectsMap);
+      } catch (error) {
+        console.error('Error loading projects info:', error);
+      }
+    }
+
+    if (timeEntries.length > 0) {
+      loadProjects();
+    }
+  }, [timeEntries]);
+
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -35,6 +74,7 @@ export function PersonalTimeEntries({ timeEntries, loading }: PersonalTimeEntrie
       <TableHeader>
         <TableRow>
           <TableHead>التاريخ</TableHead>
+          <TableHead>المشروع</TableHead>
           <TableHead>وقت الحضور</TableHead>
           <TableHead>وقت الانصراف</TableHead>
           <TableHead>المدة</TableHead>
@@ -45,6 +85,11 @@ export function PersonalTimeEntries({ timeEntries, loading }: PersonalTimeEntrie
         {timeEntries.map((entry) => (
           <TableRow key={entry.id}>
             <TableCell>{formatDateInArabic(entry.date)}</TableCell>
+            <TableCell>
+              {entry.projectId && projectsInfo[entry.projectId] 
+                ? projectsInfo[entry.projectId] 
+                : 'غير محدد'}
+            </TableCell>
             <TableCell>
               {new Date(entry.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </TableCell>

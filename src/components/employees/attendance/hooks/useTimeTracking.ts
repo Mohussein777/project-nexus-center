@@ -80,7 +80,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
     };
   }, [isTracking]);
   
-  const handleStartTracking = async () => {
+  const handleStartTracking = async (projectId: number) => {
     try {
       if (!employeeId) {
         console.error("Cannot start tracking: No employee ID provided");
@@ -92,7 +92,17 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
         return;
       }
 
-      console.log("Starting time tracking for employee:", employeeId);
+      if (!projectId) {
+        console.error("Cannot start tracking: No project selected");
+        toast({
+          title: "خطأ",
+          description: "يرجى اختيار مشروع أولاً",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Starting time tracking for employee:", employeeId, "on project:", projectId);
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       
@@ -100,6 +110,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
         .from('time_entries')
         .insert([{
           employee_id: employeeId,
+          project_id: projectId,
           date: today,
           start_time: now.toISOString(),
           status: 'active',

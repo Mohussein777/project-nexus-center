@@ -6,6 +6,8 @@ import { TimeDisplayCounter } from './attendance/TimeDisplayCounter';
 import { TrackingControls } from './attendance/TrackingControls';
 import { TrackingStartTime } from './attendance/TrackingStartTime';
 import { LoadingTracker } from './attendance/LoadingTracker';
+import { ProjectSelector } from './attendance/ProjectSelector';
+import { useState } from 'react';
 
 interface TimeTrackingWidgetProps {
   employeeId: string;
@@ -13,6 +15,8 @@ interface TimeTrackingWidgetProps {
 }
 
 export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTrackingWidgetProps) {
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  
   const {
     isTracking,
     currentEntry,
@@ -22,6 +26,12 @@ export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTracki
     handleStartTracking,
     handleStopTracking
   } = useTimeTracking(employeeId, onTimeEntryUpdate);
+  
+  const onStart = () => {
+    if (selectedProjectId) {
+      handleStartTracking(selectedProjectId);
+    }
+  };
   
   if (loading) {
     return (
@@ -51,10 +61,18 @@ export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTracki
         <div className="flex flex-col items-center space-y-4">
           <TimeDisplayCounter time={formatElapsedTime(elapsedTime)} />
           
+          {!isTracking && (
+            <ProjectSelector 
+              selectedProjectId={selectedProjectId} 
+              onProjectSelect={setSelectedProjectId}
+            />
+          )}
+          
           <TrackingControls 
             isTracking={isTracking}
-            onStart={handleStartTracking}
+            onStart={onStart}
             onStop={handleStopTracking}
+            projectSelected={selectedProjectId !== null || isTracking}
           />
           
           {isTracking && currentEntry && (
