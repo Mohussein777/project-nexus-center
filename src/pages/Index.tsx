@@ -13,7 +13,7 @@ const Index = () => {
       <div className="min-h-[80vh] flex flex-col items-center justify-center">
         <div className="glass-card dark:glass-card-dark rounded-xl p-8 max-w-3xl w-full text-center space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            {/* {language === 'ar' ? 'مركز نكسس للمشاريع' : 'Project Nexus Center'} */}
+            {language === 'ar' ? 'مركز نكسس للمشاريع' : 'Project Nexus Center'}
           </h1>
           
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">

@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { TimeEntry } from '../types';
 
 // Fetch employee by email
 export const fetchCurrentUserEmployee = async (email: string) => {
@@ -35,6 +36,36 @@ export const formatDateForApi = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
+// Format date in Arabic
+export const formatDateInArabic = (dateStr: string): string => {
+  if (!dateStr) return '-';
+  
+  try {
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      weekday: 'long'
+    };
+    
+    return date.toLocaleDateString('ar-EG', options);
+  } catch (error) {
+    console.error('Error formatting date to Arabic:', error);
+    return dateStr;
+  }
+};
+
+// Format time spent in seconds to HH:MM format
+export const formatTimeSpent = (seconds: number | null): string => {
+  if (seconds === null || seconds === undefined) return '00:00';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
 // Get the start and end of a date range
 export const getDateRange = (period: 'today' | 'week' | 'month'): { start: Date, end: Date } => {
   const today = new Date();
@@ -55,4 +86,20 @@ export const getDateRange = (period: 'today' | 'week' | 'month'): { start: Date,
   }
   
   return { start, end };
+};
+
+// Map TimeEntry from database format to application format
+export const mapTimeEntry = (entry: any): TimeEntry => {
+  return {
+    id: Number(entry.id) || 0,
+    employeeId: entry.employee_id || '',
+    projectId: entry.project_id || null,
+    taskId: entry.task_id || null,
+    startTime: entry.start_time || '',
+    endTime: entry.end_time || null,
+    duration: entry.duration || null,
+    description: entry.description || '',
+    date: entry.date || '',
+    status: entry.status || 'completed'
+  };
 };

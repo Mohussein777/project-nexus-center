@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Square, Timer } from "lucide-react";
 import { useTimeTracking } from "./hooks/useTimeTracking";
+import { formatElapsedTime } from "@/utils/timeFormatUtils";
 import {
   Popover,
   PopoverContent,
@@ -27,7 +28,7 @@ export function TimerButton() {
         try {
           const employee = await fetchCurrentUserEmployee(user.email);
           if (employee) {
-            setEmployeeId(employee.id.toString());
+            setEmployeeId(employee.id);
           }
         } catch (error) {
           console.error("Error fetching employee ID:", error);
@@ -43,7 +44,6 @@ export function TimerButton() {
   const {
     isTracking,
     elapsedTime,
-    formatElapsedTime,
     handleStartTracking,
     handleStopTracking,
     loading: trackingLoading

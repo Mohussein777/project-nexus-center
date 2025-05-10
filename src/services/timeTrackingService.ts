@@ -34,8 +34,8 @@ export const getCurrentTimeEntry = async (employeeId: string) => {
   
   return { 
     data: {
-      id: Number(entry.id),
-      employeeId: Number(entry.employee_id),
+      id: entry.id,
+      employeeId: entry.employee_id,
       projectId: entry.project_id,
       taskId: entry.task_id || null,
       startTime: entry.start_time,
@@ -88,8 +88,8 @@ export const startTimeTracking = async (entry: {
     console.log('Time tracking started successfully:', data);
     
     return {
-      id: Number(data.id),
-      employeeId: Number(data.employee_id),
+      id: data.id,
+      employeeId: data.employee_id,
       projectId: data.project_id,
       taskId: data.task_id || null,
       startTime: data.start_time,
@@ -105,20 +105,24 @@ export const startTimeTracking = async (entry: {
   }
 };
 
-export const stopTimeTracking = async (entryId: string | number): Promise<boolean> => {
-  const entryIdStr = entryId.toString();
-  console.log(`Stopping time tracking for entry ${entryIdStr}`);
+export const stopTimeTracking = async (entryId: string): Promise<boolean> => {
+  if (!entryId) {
+    console.error("Invalid time entry ID for stopTimeTracking");
+    return false;
+  }
+  
+  console.log(`Stopping time tracking for entry ${entryId}`);
   
   // Get the existing entry to calculate duration
   try {
     const { data: existingEntry } = await supabase
       .from('time_entries')
       .select('*')
-      .eq('id', entryIdStr)
+      .eq('id', entryId)
       .single();
 
     if (!existingEntry || !existingEntry.start_time) {
-      console.error(`Time entry ${entryIdStr} not found or invalid`);
+      console.error(`Time entry ${entryId} not found or invalid`);
       return false;
     }
 
@@ -133,17 +137,17 @@ export const stopTimeTracking = async (entryId: string | number): Promise<boolea
         duration: durationSeconds,
         status: 'completed'
       })
-      .eq('id', entryIdStr);
+      .eq('id', entryId);
 
     if (error) {
-      console.error(`Error stopping time entry ${entryIdStr}:`, error);
+      console.error(`Error stopping time entry ${entryId}:`, error);
       return false;
     }
 
-    console.log(`Time entry ${entryIdStr} stopped successfully`);
+    console.log(`Time entry ${entryId} stopped successfully`);
     return true;
   } catch (error) {
-    console.error(`Exception in stopTimeTracking for entry ${entryIdStr}:`, error);
+    console.error(`Exception in stopTimeTracking for entry ${entryId}:`, error);
     return false;
   }
 };

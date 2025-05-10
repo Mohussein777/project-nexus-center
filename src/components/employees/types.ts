@@ -1,4 +1,3 @@
-
 export interface Employee {
   id: number;
   name: string;
@@ -21,16 +20,16 @@ export interface Employee {
 }
 
 export interface TimeEntry {
-  id: number;
-  employeeId: number;
+  id: string | number;
+  employeeId: string | number;
   projectId: number | null;
-  taskId: string | null; // UUID from Supabase
+  taskId: string | null;
   startTime: string;
   endTime: string | null;
-  duration: number | null; // في الثواني
+  duration: number | null;
   description: string;
   date: string;
-  status: 'active' | 'completed';
+  status: string;
 }
 
 export interface Project {

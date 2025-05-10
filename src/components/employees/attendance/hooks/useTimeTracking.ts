@@ -7,10 +7,11 @@ import {
   startTimeTracking, 
   stopTimeTracking 
 } from '@/services/timeTrackingService';
+import { TimeEntry } from '../../types';
 
 export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => void) {
   const [isTracking, setIsTracking] = useState(false);
-  const [currentEntry, setCurrentEntry] = useState<any>(null);
+  const [currentEntry, setCurrentEntry] = useState<TimeEntry | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -143,19 +144,27 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   
   // Handle stop tracking function
   const handleStopTracking = async () => {
-    if (!currentEntry) {
-      console.error("Cannot stop tracking: No active entry found");
+    if (!currentEntry || !currentEntry.id) {
+      console.error("Cannot stop tracking: No active entry found or invalid entry ID");
+      toast({
+        title: "خطأ",
+        description: "لا يوجد تسجيل وقت نشط للإيقاف",
+        variant: "destructive",
+      });
       return;
     }
     
     try {
-      console.log("Stopping time tracking for entry:", currentEntry.id);
+      // Make sure we have a string ID
+      const entryId = String(currentEntry.id);
+      console.log("Stopping time tracking for entry:", entryId);
+      
       const now = new Date();
       const startTime = new Date(currentEntry.startTime).getTime();
       const endTime = now.getTime();
       const duration = Math.floor((endTime - startTime) / 1000); // in seconds
       
-      const success = await stopTimeTracking(currentEntry.id);
+      const success = await stopTimeTracking(entryId);
         
       if (!success) {
         throw new Error("Failed to update time entry");
