@@ -28,7 +28,8 @@ export function TimerButton() {
         try {
           const employee = await fetchCurrentUserEmployee(user.email);
           if (employee) {
-            setEmployeeId(employee.id);
+            // Convert employee.id to string since setEmployeeId expects a string
+            setEmployeeId(String(employee.id));
           }
         } catch (error) {
           console.error("Error fetching employee ID:", error);

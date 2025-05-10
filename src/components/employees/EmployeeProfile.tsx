@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
@@ -70,9 +71,12 @@ export default function EmployeeProfile() {
   const handleStartTime = () => {
     if (timeStatus.isActive || !employee) return;
     
+    // Ensure we're passing a number to startNewTimeEntry
+    const projectIdAsNumber = newTimeEntry.projectId !== null ? Number(newTimeEntry.projectId) : null;
+    
     const newEntry = startNewTimeEntry(
       employee.id,
-      newTimeEntry.projectId,
+      projectIdAsNumber,
       newTimeEntry.description
     );
     
