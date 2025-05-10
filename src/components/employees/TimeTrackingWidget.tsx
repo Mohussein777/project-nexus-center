@@ -76,7 +76,7 @@ export function TimeTrackingWidget({ employeeId, onTimeEntryUpdate }: TimeTracki
           />
           
           {isTracking && currentEntry && (
-            <TrackingStartTime startTime={currentEntry.start_time} />
+            <TrackingStartTime startTime={currentEntry.startTime} />
           )}
         </div>
       </CardContent>

@@ -1,9 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TimeEntry } from '../types';
+import { Employee, TimeEntry } from '../types';
 
 // Fetch employee by email
-export const fetchCurrentUserEmployee = async (email: string) => {
+export const fetchCurrentUserEmployee = async (email: string): Promise<Employee | null> => {
   console.log("Fetching employee data for email:", email);
   
   try {
@@ -24,7 +24,22 @@ export const fetchCurrentUserEmployee = async (email: string) => {
     }
     
     console.log("Found employee:", data);
-    return data;
+    // Map the database response to match the Employee type
+    return {
+      id: Number(data.id),
+      name: data.name,
+      position: data.position,
+      email: data.email,
+      phone: data.phone || '',
+      department: data.department,
+      joinDate: data.join_date,
+      status: data.status as 'Active' | 'On Leave' | 'Inactive',
+      avatar: data.name.split(' ').map(n => n[0]).join(''),
+      color: 'from-blue-500 to-cyan-500', // Default color
+      projects: 0,
+      employeeId: data.employee_id || '',
+      manager: data.manager || ''
+    };
   } catch (error) {
     console.error("Exception in fetchCurrentUserEmployee:", error);
     return null;
@@ -91,7 +106,7 @@ export const getDateRange = (period: 'today' | 'week' | 'month'): { start: Date,
 // Map TimeEntry from database format to application format
 export const mapTimeEntry = (entry: any): TimeEntry => {
   return {
-    id: Number(entry.id) || 0,
+    id: entry.id || 0,
     employeeId: entry.employee_id || '',
     projectId: entry.project_id || null,
     taskId: entry.task_id || null,

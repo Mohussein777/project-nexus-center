@@ -22,8 +22,12 @@ export function AttendanceManagement() {
   // Fetch current user's employee record
   useEffect(() => {
     const loadCurrentUserEmployee = async () => {
-      const employee = await fetchCurrentUserEmployee(user?.email);
-      setCurrentUserEmployee(employee);
+      if (user?.email) {
+        const employee = await fetchCurrentUserEmployee(user.email);
+        if (employee) {
+          setCurrentUserEmployee(employee);
+        }
+      }
     };
     
     if (user?.email) {
