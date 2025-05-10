@@ -75,7 +75,8 @@ export default function EmployeeProfile() {
     const projectIdAsNumber = newTimeEntry.projectId !== null ? Number(newTimeEntry.projectId) : null;
     
     const newEntry = startNewTimeEntry(
-      employee.id,
+      // Ensure employee.id is converted to a number
+      typeof employee.id === 'string' ? parseInt(employee.id) : employee.id,
       projectIdAsNumber,
       newTimeEntry.description
     );
