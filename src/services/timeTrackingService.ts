@@ -4,49 +4,54 @@ import { TimeEntry } from "@/components/employees/types";
 
 // Get the current active time entry for an employee
 export const getCurrentTimeEntry = async (employeeId: string) => {
-  if (!employeeId) {
-    console.log("No employee ID provided to getCurrentTimeEntry");
-    return { data: null, error: new Error("No employee ID provided") };
+  if (!employeeId || employeeId === "null" || employeeId === "undefined" || employeeId === "NaN") {
+    console.log("Invalid employee ID provided to getCurrentTimeEntry:", employeeId);
+    return { data: null, error: new Error("Invalid employee ID provided") };
   }
   
   console.log(`Fetching current time entry for employee ${employeeId}`);
   
-  const { data, error } = await supabase
-    .from('time_entries')
-    .select('*')
-    .eq('employee_id', employeeId)
-    .eq('status', 'active')
-    .order('start_time', { ascending: false })
-    .limit(1);
+  try {
+    const { data, error } = await supabase
+      .from('time_entries')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .eq('status', 'active')
+      .order('start_time', { ascending: false })
+      .limit(1);
+      
+    if (error) {
+      console.error(`Error fetching current time entry for employee ${employeeId}:`, error);
+      return { data: null, error };
+    }
     
-  if (error) {
-    console.error(`Error fetching current time entry for employee ${employeeId}:`, error);
+    if (!data || data.length === 0) {
+      console.log(`No active time entry found for employee ${employeeId}`);
+      return { data: null, error: null };
+    }
+    
+    const entry = data[0];
+    console.log(`Found active time entry for employee ${employeeId}:`, entry);
+    
+    return { 
+      data: {
+        id: entry.id,
+        employeeId: entry.employee_id,
+        projectId: entry.project_id,
+        taskId: entry.task_id || null,
+        startTime: entry.start_time,
+        endTime: null,
+        duration: null,
+        description: entry.description || '',
+        date: entry.date,
+        status: 'active'
+      }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error(`Exception in getCurrentTimeEntry for employee ${employeeId}:`, error);
     return { data: null, error };
   }
-  
-  if (!data || data.length === 0) {
-    console.log(`No active time entry found for employee ${employeeId}`);
-    return { data: null, error: null };
-  }
-  
-  const entry = data[0];
-  console.log(`Found active time entry for employee ${employeeId}:`, entry);
-  
-  return { 
-    data: {
-      id: entry.id,
-      employeeId: entry.employee_id,
-      projectId: entry.project_id,
-      taskId: entry.task_id || null,
-      startTime: entry.start_time,
-      endTime: null,
-      duration: null,
-      description: entry.description || '',
-      date: entry.date,
-      status: 'active'
-    }, 
-    error: null 
-  };
 };
 
 export const startTimeTracking = async (entry: {
@@ -55,8 +60,8 @@ export const startTimeTracking = async (entry: {
   task_id?: string;
   description?: string;
 }): Promise<TimeEntry | null> => {
-  if (!entry.employee_id || !entry.project_id) {
-    console.error("Employee ID or Project ID missing for startTimeTracking");
+  if (!entry.employee_id || entry.employee_id === "NaN" || !entry.project_id) {
+    console.error("Employee ID or Project ID missing for startTimeTracking:", entry);
     return null;
   }
   

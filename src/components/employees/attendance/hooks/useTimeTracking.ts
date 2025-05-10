@@ -19,8 +19,8 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   // Initialize time tracking by checking for active time entries
   const initializeTimeEntry = useCallback(async () => {
     try {
-      if (!employeeId) {
-        console.log("No employee ID provided");
+      if (!employeeId || employeeId === "null" || employeeId === "undefined" || employeeId === "NaN") {
+        console.log("Invalid employee ID provided:", employeeId);
         setLoading(false);
         return;
       }
@@ -57,7 +57,7 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   
   // Initialize time entry on component mount
   useEffect(() => {
-    if (employeeId) {
+    if (employeeId && employeeId !== "NaN") {
       console.log("Initializing time entry for employee:", employeeId);
       initializeTimeEntry();
     } else {
@@ -88,11 +88,11 @@ export function useTimeTracking(employeeId: string, onTimeEntryUpdate: () => voi
   // Handle start tracking function
   const handleStartTracking = async (projectId: number) => {
     try {
-      if (!employeeId) {
-        console.error("Cannot start tracking: No employee ID provided");
+      if (!employeeId || employeeId === "NaN") {
+        console.error("Cannot start tracking: No valid employee ID provided:", employeeId);
         toast({
           title: "خطأ",
-          description: "لا يمكن بدء التتبع، معرف الموظف غير متوفر",
+          description: "لا يمكن بدء التتبع، معرف الموظف غير صالح",
           variant: "destructive",
         });
         return;

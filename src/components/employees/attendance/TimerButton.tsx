@@ -28,8 +28,9 @@ export function TimerButton() {
         try {
           const employee = await fetchCurrentUserEmployee(user.email);
           if (employee) {
-            // Convert employee.id to string since setEmployeeId expects a string
+            // Make sure we're always setting a string value for employee ID
             setEmployeeId(String(employee.id));
+            console.log("Set employee ID:", String(employee.id)); // Debug log
           }
         } catch (error) {
           console.error("Error fetching employee ID:", error);
@@ -55,6 +56,7 @@ export function TimerButton() {
   
   const onStart = () => {
     if (selectedProjectId && employeeId) {
+      console.log("Starting tracking with employee ID:", employeeId, "project:", selectedProjectId); // Debug log
       handleStartTracking(selectedProjectId);
       setIsPopoverOpen(false);
     }
