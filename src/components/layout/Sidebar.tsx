@@ -36,7 +36,7 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
 
   const SidebarLink = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
     const active = isActive(to);
-    
+
     return (
       <TooltipProvider delayDuration={300}>
         <Tooltip>
@@ -46,8 +46,8 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
                 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                active 
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                active
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
                   : 'text-sidebar-foreground'
               )}
             >
@@ -64,25 +64,24 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
       </TooltipProvider>
     );
   };
-  
+
   return (
     <aside
       className={cn(
-        'bg-sidebar-background text-sidebar-foreground h-screen flex flex-col border-r border-sidebar-border transition-all duration-300',
+        'bg-sidebar-background bg-gray-700 text-sidebar-foreground h-screen flex flex-col border-r border-sidebar-border transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
-      <div className="flex items-center justify-center h-16 border-b border-sidebar-border px-4">
+      <div className="flex items-center justify-center  border-sidebar-border px-4">
         {!collapsed ? (
           <div className="flex items-center">
-            <Star className="h-6 w-6 text-sidebar-primary mr-2" />
-            <h1 className="text-xl font-semibold">Nexus</h1>
+
+            <img src="logo-white.png" alt="" className='w-28 mt-4' />
           </div>
         ) : (
-          <Star className="h-6 w-6 text-sidebar-primary" />
-        )}
+          <img src="logo-collapsed.png" alt="" className='w-32 mt-4 rounded-full' />)}
       </div>
-      
+
       <div className="flex flex-col flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         <SidebarLink to="/dashboard" icon={LayoutDashboard} label={t('dashboard')} />
         <SidebarLink to="/projects" icon={FolderKanban} label={t('projects')} />
@@ -93,7 +92,7 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
         <SidebarLink to="/financial" icon={CreditCard} label={t('financial')} />
         <SidebarLink to="/settings" icon={Settings} label={t('settings')} />
       </div>
-      
+
       <div className="p-2 border-t border-sidebar-border">
         <SidebarLink to="/profile" icon={UserCircle} label={t('profile')} />
       </div>

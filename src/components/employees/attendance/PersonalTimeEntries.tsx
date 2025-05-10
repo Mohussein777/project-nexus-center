@@ -4,7 +4,7 @@ import {
   TableHeader, TableRow 
 } from "@/components/ui/table";
 import { TimeEntry } from '../types';
-import { formatDateInArabic, formatTimeSpent } from './attendanceUtils';
+// import { formatDateInArabic, formatTimeSpent } from './attendanceUtils';
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
