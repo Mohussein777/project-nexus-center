@@ -39,6 +39,14 @@ const Auth = () => {
       const { error } = await signIn(formData.email, formData.password);
       
       if (error) {
+        if (error.message === 'Email not confirmed') {
+          toast({
+            title: t('error'),
+            description: 'يرجى تأكيد البريد الإلكتروني أولاً. تحقق من صندوق الوارد.',
+            variant: 'destructive',
+          });
+          return;
+        }
         throw error;
       }
       
@@ -95,7 +103,7 @@ const Auth = () => {
       
       toast({
         title: t('registrationSuccessful'),
-        description: t('pleaseCheckEmail'),
+        description: 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد أو مجلد الرسائل غير المرغوب فيها.',
       });
     } catch (error: any) {
       console.error('Registration error:', error);

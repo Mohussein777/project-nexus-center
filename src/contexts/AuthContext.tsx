@@ -93,7 +93,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email, 
         password,
         options: {
-          data: userData
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
       return { error };
