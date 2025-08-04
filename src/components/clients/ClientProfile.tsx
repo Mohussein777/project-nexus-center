@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClientsOverview } from './ClientsOverview';
 import { InteractionsList } from './InteractionsList';
 import { ContractsList } from './ContractsList';
 import { SatisfactionAnalysis } from './SatisfactionAnalysis';
@@ -11,8 +9,15 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { Interaction, Contract } from './types';
-import { SatisfactionAnalysisProps } from './SatisfactionAnalysisProps';
+import { Interaction, Contract, Client, SatisfactionMetric } from './types';
+import { 
+  getClientById, 
+  getClientInteractions, 
+  getClientContracts, 
+  getClientSatisfactionMetrics,
+  mapDbInteractionToClientInteraction,
+  mapDbContractToClientContract 
+} from '@/services/clients';
 
 export interface ClientProfileProps {
   clientId?: number;
@@ -26,9 +31,10 @@ export function ClientProfile({ clientId: propClientId }: ClientProfileProps) {
   
   const clientId = propClientId || (paramClientId ? parseInt(paramClientId) : undefined);
   
-  const [client, setClient] = useState<any>(null);
+  const [client, setClient] = useState<Client | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [satisfaction, setSatisfaction] = useState<SatisfactionMetric | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -39,58 +45,36 @@ export function ClientProfile({ clientId: propClientId }: ClientProfileProps) {
       }
       
       try {
-        // Placeholder for API call
-        setTimeout(() => {
-          const clientData = {
-            id: clientId,
-            name: "Sample Client",
-            code: "CLNT123",
-            status: "Active",
-            type: "Enterprise",
-            email: "contact@sample.com",
-            phone: "+1 (555) 123-4567",
-            contact: "John Doe",
-            location: "New York, NY",
-            projects: 5
-          };
-          
-          const interactionsData: Interaction[] = [
-            {
-              id: 1,
-              clientId: clientId,
-              date: "2023-01-15T10:30:00Z",
-              summary: "Initial consultation meeting",
-              type: "Meeting",
-              employee: "Jane Smith",
-              sentiment: "Positive"
-            }
-          ];
-          
-          const contractsData: Contract[] = [
-            {
-              id: 1,
-              clientId: clientId,
-              title: "Annual Support Contract",
-              status: "Active",
-              startDate: "2023-01-01",
-              endDate: "2024-01-01",
-              value: 50000,
-              renewalAlert: true
-            }
-          ];
-          
+        // Load real data from Supabase
+        const [clientData, clientInteractions, clientContracts, satisfactionData] = await Promise.all([
+          getClientById(clientId),
+          getClientInteractions(clientId),
+          getClientContracts(clientId),
+          getClientSatisfactionMetrics(clientId)
+        ]);
+        
+        if (clientData) {
           setClient(clientData);
-          setInteractions(interactionsData);
-          setContracts(contractsData);
-          setLoading(false);
-        }, 1000);
+          // Use the data as-is since services return properly formatted data
+          setInteractions(clientInteractions as Interaction[]);
+          setContracts(clientContracts as Contract[]);
+          setSatisfaction(satisfactionData);
+        } else {
+          toast({
+            title: "خطأ",
+            description: "لم يتم العثور على العميل",
+            variant: "destructive",
+          });
+          navigate('/clients');
+        }
       } catch (error) {
         console.error("Error fetching client data:", error);
         toast({
           title: t('error'),
-          description: t('errorLoadingClientData'),
+          description: "حدث خطأ أثناء تحميل بيانات العميل",
           variant: "destructive",
         });
+      } finally {
         setLoading(false);
       }
     };
@@ -147,7 +131,11 @@ export function ClientProfile({ clientId: propClientId }: ClientProfileProps) {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>{client.name}</CardTitle>
-            <div className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-3 py-1 rounded-full text-sm">
+            <div className={`px-3 py-1 rounded-full text-sm ${
+              client.status === 'Active' 
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+            }`}>
               {client.status}
             </div>
           </div>
