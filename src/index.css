@@ -185,7 +185,7 @@
 }
 
 .hero-card {
-  @apply bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/20 dark:border-gray-700/30 shadow-2xl rounded-3xl transition-all duration-500 hover:shadow-3xl hover:transform hover:scale-[1.02];
+  @apply bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/20 dark:border-gray-700/30 shadow-2xl rounded-3xl transition-all duration-500 hover:shadow-xl hover:transform hover:scale-[1.02];
 }
 
 /* Feature cards */
