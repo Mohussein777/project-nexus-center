@@ -1,6 +1,6 @@
 
 import { MainLayout } from '../components/layout/MainLayout';
-import { AttendanceManagement } from '../components/employees/AttendanceManagement';
+import { ClockifyAttendance } from '../components/employees/ClockifyAttendance';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ const EmployeeAttendance = () => {
 
   return (
     <MainLayout>
-      <AttendanceManagement />
+      <ClockifyAttendance />
     </MainLayout>
   );
 };
