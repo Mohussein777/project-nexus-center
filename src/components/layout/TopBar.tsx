@@ -54,13 +54,13 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
   };
   
   return (
-    <header className="h-16 border-b bg-background flex items-center px-4">
+    <header className="h-16 border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-gray-200/50 dark:border-gray-700/50 flex items-center px-6 shadow-sm">
       <div className="flex items-center flex-1">
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="mr-2"
+          className="mr-3 hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -91,16 +91,16 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
           </div>
         )}
         
-        <div className="hidden lg:flex max-w-xl flex-1 mx-4 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="hidden lg:flex max-w-xl flex-1 mx-6 relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
           <Input
             placeholder={t('searchProjects')}
-            className="pl-9 h-9"
+            className="pl-11 h-10 bg-white/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 rounded-xl backdrop-blur-sm focus:bg-white dark:focus:bg-gray-800 transition-all duration-200 shadow-sm"
           />
         </div>
       </div>
       
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-4">
         {/* Timer Button - Make sure this is rendered properly */}
         {user && (
           <TimerButton />
@@ -108,7 +108,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105 rounded-xl">
               <Globe className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
@@ -123,19 +123,22 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, isRtl }: TopBarProps
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground">
+        <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105 rounded-xl">
           {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
         </Button>
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground relative" onClick={() => navigate('/notifications')}>
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105 rounded-xl relative" onClick={() => navigate('/notifications')}>
           <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-red-500 to-red-600 rounded-full animate-pulse shadow-lg"></span>
         </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <UserCircle className="h-8 w-8 text-primary" />
+            <Button variant="ghost" size="icon" className="rounded-full hover:scale-105 transition-all duration-200 border-2 border-transparent hover:border-primary/30">
+              <div className="relative">
+                <UserCircle className="h-8 w-8 text-primary" />
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

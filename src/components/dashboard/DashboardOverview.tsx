@@ -71,40 +71,81 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard 
-          title="المشاريع النشطة" 
-          value={inProgressProjects.toString()} 
-          change={totalProjects ? `من إجمالي ${totalProjects}` : undefined} 
-          trend="up" 
-          icon={<Briefcase size={20} />} 
-        />
-        <MetricCard 
-          title="ساعات العمل" 
-          value="1,284" 
-          change="هذا الشهر" 
-          trend="up" 
-          icon={<Clock size={20} />} 
-        />
-        <MetricCard 
-          title="إجمالي الإيرادات" 
-          value={financialSummary ? formatCurrency(financialSummary.totalRevenue.toString()) : "..."} 
-          change={financialSummary ? `${financialSummary.revenueGrowth}% من الشهر الماضي` : undefined} 
-          trend="up" 
-          icon={<DollarSign size={20} />} 
-        />
-        <MetricCard 
-          title="الفواتير المعلقة" 
-          value={financialSummary ? formatCurrency(financialSummary.pendingInvoices.toString()) : "..."} 
-          change={financialSummary ? `${financialSummary.pendingInvoicesCount} فواتير` : undefined} 
-          trend="neutral" 
-          icon={<Calendar size={20} />} 
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="metric-card dark:metric-card-dark p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white">
+              <Briefcase size={24} />
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">{inProgressProjects}</div>
+              <div className="text-xs text-muted-foreground">من إجمالي {totalProjects}</div>
+            </div>
+          </div>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">المشاريع النشطة</h3>
+          <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+            ↗ {totalProjects ? Math.round((inProgressProjects/totalProjects)*100) : 0}% نشطة
+          </div>
+        </div>
+
+        <div className="metric-card dark:metric-card-dark p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 text-white">
+              <Clock size={24} />
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-purple-600">1,284</div>
+              <div className="text-xs text-muted-foreground">ساعة</div>
+            </div>
+          </div>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">ساعات العمل</h3>
+          <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+            ↗ هذا الشهر
+          </div>
+        </div>
+
+        <div className="metric-card dark:metric-card-dark p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+              <DollarSign size={24} />
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-green-600">
+                {financialSummary ? formatCurrency(financialSummary.totalRevenue.toString()) : "..."}
+              </div>
+              <div className="text-xs text-muted-foreground">ريال سعودي</div>
+            </div>
+          </div>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">إجمالي الإيرادات</h3>
+          <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+            ↗ {financialSummary ? `${financialSummary.revenueGrowth}%` : '...'} من الشهر الماضي
+          </div>
+        </div>
+
+        <div className="metric-card dark:metric-card-dark p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 text-white">
+              <Calendar size={24} />
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-orange-600">
+                {financialSummary ? formatCurrency(financialSummary.pendingInvoices.toString()) : "..."}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {financialSummary ? financialSummary.pendingInvoicesCount : "..."} فاتورة
+              </div>
+            </div>
+          </div>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">الفواتير المعلقة</h3>
+          <div className="mt-2 text-sm text-orange-600 dark:text-orange-400">
+            → تحتاج متابعة
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-card dark:glass-card-dark rounded-xl p-4">
-          <h2 className="text-lg font-semibold mb-4">ملخص حالة المشاريع</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 modern-card dark:modern-card-dark p-6">
+          <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">ملخص حالة المشاريع</h2>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-1">
@@ -159,8 +200,8 @@ export function DashboardOverview() {
           </div>
         </div>
 
-        <div className="glass-card dark:glass-card-dark rounded-xl p-4">
-          <h2 className="text-lg font-semibold mb-4">ملخص مالي</h2>
+        <div className="modern-card dark:modern-card-dark p-6">
+          <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">ملخص مالي</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -206,10 +247,10 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-card dark:glass-card-dark rounded-xl p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">مالية المشاريع</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 modern-card dark:modern-card-dark p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">مالية المشاريع</h2>
             <a href="/financial" className="text-sm text-primary font-medium">
               عرض الكل
             </a>
@@ -255,8 +296,8 @@ export function DashboardOverview() {
           </div>
         </div>
 
-        <div className="glass-card dark:glass-card-dark rounded-xl p-4">
-          <h2 className="text-lg font-semibold mb-4">المواعيد النهائية القادمة</h2>
+        <div className="modern-card dark:modern-card-dark p-6">
+          <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">المواعيد النهائية القادمة</h2>
           <div className="space-y-3">
             {projects
               .filter(p => p.status !== 'Completed' && p.deadline)

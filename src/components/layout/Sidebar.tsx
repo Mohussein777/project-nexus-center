@@ -44,19 +44,34 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
             <NavLink
               to={to}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
-                'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 mx-2 my-1 group relative overflow-hidden',
+                'hover:bg-white/10 hover:shadow-lg hover:scale-105',
                 active
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                  : 'text-sidebar-foreground'
+                  ? 'bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-primary/30'
+                  : 'text-sidebar-foreground hover:text-white'
               )}
             >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm whitespace-nowrap">{label}</span>}
+              {active && (
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-600 rounded-2xl" />
+              )}
+              <Icon className={cn(
+                "h-5 w-5 flex-shrink-0 relative z-10 transition-all duration-300",
+                active ? "text-white" : "group-hover:scale-110"
+              )} />
+              {!collapsed && (
+                <span className="text-sm font-medium whitespace-nowrap relative z-10 transition-all duration-300">
+                  {label}
+                </span>
+              )}
+              {active && !collapsed && (
+                <div className="ml-auto relative z-10">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                </div>
+              )}
             </NavLink>
           </TooltipTrigger>
           {collapsed && (
-            <TooltipContent side={isRtl ? 'left' : 'right'}>
+            <TooltipContent side={isRtl ? 'left' : 'right'} className="bg-gray-900 text-white border-gray-700">
               {label}
             </TooltipContent>
           )}
@@ -68,21 +83,26 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'bg-sidebar-background bg-gray-700 text-sidebar-foreground h-screen flex flex-col border-r border-sidebar-border transition-all duration-300',
+        'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white h-screen flex flex-col border-r border-gray-700/50 transition-all duration-300 shadow-2xl',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
-      <div className="flex items-center justify-center  border-sidebar-border px-4">
+      <div className="flex items-center justify-center px-4 py-6 border-b border-gray-700/30">
         {!collapsed ? (
-          <div className="flex items-center">
-
-            <img src="logo-white.png" alt="" className='w-28 mt-4' />
+          <div className="flex items-center gap-3">
+            <img src="logo-white.png" alt="Logo" className='h-10 object-contain' />
+            <div className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent font-bold text-xl">
+              Nexus
+            </div>
           </div>
         ) : (
-          <img src="logo-collapsed.png" alt="" className='w-32 mt-4 rounded-full' />)}
+          <div className="p-2 rounded-xl bg-gradient-to-r from-primary to-blue-600 shadow-lg">
+            <img src="logo-collapsed.png" alt="Logo" className='h-6 w-6 object-contain' />
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <div className="flex flex-col flex-1 py-6 px-2 space-y-2 overflow-y-auto">
         <SidebarLink to="/dashboard" icon={LayoutDashboard} label={t('dashboard')} />
         <SidebarLink to="/projects" icon={FolderKanban} label={t('projects')} />
         <SidebarLink to="/workload" icon={BarChart4} label={t('workload')} />
@@ -93,7 +113,7 @@ export function Sidebar({ collapsed, isRtl }: SidebarProps) {
         <SidebarLink to="/settings" icon={Settings} label={t('settings')} />
       </div>
 
-      <div className="p-2 border-t border-sidebar-border">
+      <div className="p-4 border-t border-gray-700/30 bg-gradient-to-r from-gray-800/50 to-gray-900/50">
         <SidebarLink to="/profile" icon={UserCircle} label={t('profile')} />
       </div>
     </aside>
